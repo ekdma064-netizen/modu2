@@ -138,6 +138,11 @@ input:focus{border-color:var(--g);}
     <!-- 동작 인식 상태 -->
     <div id="pose-status" style="text-align:center;padding:10px;font-size:15px;color:var(--mu);margin-bottom:8px">동작을 따라 하세요!</div>
 
+    <!-- 패스 버튼: 항상 표시 -->
+    <div style="text-align:right;margin-bottom:6px">
+      <button class="btn out" id="btn-pass" style="width:auto;padding:6px 16px;margin:0;font-size:13px">이 동작 패스 ⏭</button>
+    </div>
+
     <!-- 판정 패널 -->
     <div id="judge-panel" style="display:none;text-align:center;margin-bottom:10px">
       <div id="judge-msg" style="font-size:20px;font-weight:500;margin-bottom:12px;line-height:1.5"></div>
@@ -172,16 +177,21 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = createClient(SUPA_URL, SUPA_KEY);
 
 const MISS = [
-  {n:'만세!',       e:'🙌', d:'양손을 머리 위로 높이 올리세요',       k:'raise_both'},
-  {n:'오른손 번쩍!', e:'👋', d:'오른손만 머리 위로 올리세요',          k:'raise_right'},
-  {n:'왼손 번쩍!',  e:'🤚', d:'왼손만 머리 위로 올리세요',            k:'raise_left'},
-  {n:'팔 벌려!',    e:'🤸', d:'양팔을 어깨 높이로 옆으로 쭉 펴세요',  k:'arms_wide'},
-  {n:'차렷!',       e:'🧍', d:'팔을 몸 옆에 붙이고 똑바로 서세요',    k:'attention'},
-  {n:'몸 숙여!',    e:'🙇', d:'상체를 앞으로 45도 이상 숙이세요',     k:'bow'},
-  {n:'양손 허리!',  e:'🕺', d:'양손을 허리에 올리세요',               k:'hands_hip'},
-  {n:'팔짱 껴!',    e:'🤐', d:'양팔을 가슴 앞에서 교차하세요',        k:'cross_arms'},
-  {n:'오른손 허리!', e:'💃', d:'오른손만 허리에 올리세요',              k:'right_hip'},
-  {n:'머리 감싸!',  e:'🙆', d:'양손을 머리 위에서 맞잡으세요',        k:'hands_head'},
+  {n:'만세!',       e:'🙌', d:'양손을 머리 위로 높이 올리세요',        k:'raise_both'},
+  {n:'오른손 번쩍!', e:'👋', d:'오른손만 머리 위로 올리세요',           k:'raise_right'},
+  {n:'왼손 번쩍!',  e:'🤚', d:'왼손만 머리 위로 올리세요',             k:'raise_left'},
+  {n:'팔 벌려!',    e:'🤸', d:'양팔을 어깨 높이로 옆으로 쭉 펴세요',   k:'arms_wide'},
+  {n:'차렷!',       e:'🧍', d:'팔을 몸 옆에 붙이고 똑바로 서세요',     k:'attention'},
+  {n:'몸 숙여!',    e:'🙇', d:'상체를 앞으로 45도 이상 숙이세요',      k:'bow'},
+  {n:'양손 허리!',  e:'🕺', d:'양손을 허리에 올리세요',                k:'hands_hip'},
+  {n:'팔짱 껴!',    e:'🤐', d:'양팔을 가슴 앞에서 교차하세요',         k:'cross_arms'},
+  {n:'오른손 허리!', e:'💃', d:'오른손만 허리에 올리세요',               k:'right_hip'},
+  {n:'머리 감싸!',  e:'🙆', d:'양손을 머리 위에서 맞잡으세요',         k:'hands_head'},
+  {n:'V자 팔!',     e:'✌️', d:'양팔을 머리 위로 V자 모양으로 올리세요', k:'v_arms'},
+  {n:'하트 팔!',    e:'🤍', d:'양손을 머리 위에서 하트 모양으로 만드세요',k:'heart_arms'},
+  {n:'볼 감싸!',    e:'🌸', d:'양손을 귀 옆 얼굴 높이로 올리세요',     k:'cheek_frame'},
+  {n:'오른발 올려!', e:'🦵', d:'오른쪽 무릎을 허리 높이로 올리세요',    k:'right_knee'},
+  {n:'달리기 자세!', e:'🏃', d:'한 팔 앞, 한 팔 뒤로 힘차게 뻗으세요', k:'run_pose'},
 ];
 const DUR = 300;
 
@@ -206,6 +216,7 @@ $('btn-student').addEventListener('click', goStudent);
 $('tsbtn').addEventListener('click', tStart);
 $('btn-next').addEventListener('click',  ()=>{ closeJudge(); pickM(); });
 $('btn-retry').addEventListener('click', ()=>{ closeJudge(); });
+$('btn-pass').addEventListener('click',  ()=>{ combo=1; $('scb').textContent='x1'; closeJudge(); pickM(); });
 
 // ── 판정 ──
 function closeJudge(){
@@ -472,8 +483,8 @@ function onPose(res){
     hit = lOk && rOk;
 
   } else if(k === 'bow'){
-    // 코가 어깨 높이보다 아래로 내려옴
-    hit = nose.y > shMidY + bodyH * 0.3;
+    // 코가 어깨 높이 근처로 내려오면 인정 (기준 완화)
+    hit = nose.y > shMidY || (lWrist.y > nose.y + bodyH*0.2 && rWrist.y > nose.y + bodyH*0.2);
 
   } else if(k === 'hands_hip'){
     // 양손이 엉덩이 높이에 있음
@@ -494,11 +505,39 @@ function onPose(res){
     const lNotHip = Math.abs(lWrist.y - lHip.y) > bodyH * 0.35;
     hit = rOk && lNotHip;
 
-  } else if(k === 'hands_head'){
-    // 양손이 코 위에서 서로 가까이 모임
+  } else if(k === 'v_arms'){
+    // 양손이 코 위, 손 간격이 어깨너비보다 넓게 (V자)
     const bothUp = lWrist.y < nose.y && rWrist.y < nose.y;
-    const close  = Math.abs(lWrist.x - rWrist.x) < shW * 0.7;
+    const spread = Math.abs(lWrist.x - rWrist.x) > shW * 1.2;
+    hit = bothUp && spread;
+
+  } else if(k === 'heart_arms'){
+    // 양손이 코 위, 손 간격이 좁게 모임 (하트)
+    const bothUp = lWrist.y < nose.y && rWrist.y < nose.y;
+    const close  = Math.abs(lWrist.x - rWrist.x) < shW * 0.5;
     hit = bothUp && close;
+
+  } else if(k === 'cheek_frame'){
+    // 양손이 귀 옆 얼굴 높이 (코와 어깨 사이)
+    const lFace = lWrist.y > nose.y && lWrist.y < lShoulder.y;
+    const rFace = rWrist.y > nose.y && rWrist.y < rShoulder.y;
+    const lSide = Math.abs(lWrist.x - lShoulder.x) < shW * 0.6;
+    const rSide = Math.abs(rWrist.x - rShoulder.x) < shW * 0.6;
+    hit = lFace && rFace && lSide && rSide;
+
+  } else if(k === 'right_knee'){
+    // 오른쪽 무릎이 엉덩이보다 위로 올라옴
+    const rKnee = L[26];
+    hit = rKnee && rKnee.y < rHip.y - bodyH * 0.1;
+
+  } else if(k === 'run_pose'){
+    // 한 손은 앞(몸 중심 앞쪽), 한 손은 뒤(몸 중심 뒤쪽) — 팔이 앞뒤로 엇갈림
+    const midX = (lShoulder.x + rShoulder.x) / 2;
+    const lFwd = lWrist.y < shMidY && lWrist.y > nose.y;
+    const rFwd = rWrist.y < shMidY && rWrist.y > nose.y;
+    const lBwd = lWrist.y > hipMidY;
+    const rBwd = rWrist.y > hipMidY;
+    hit = (lFwd && rBwd) || (rFwd && lBwd);
   }
 
   const ps = $('pose-status');
