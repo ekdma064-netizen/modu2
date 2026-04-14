@@ -162,14 +162,18 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = createClient(SUPA_URL, SUPA_KEY);
 
 const MISS = [
-  {n:'만세!',      e:'🙌',d:'양손을 머리 위로 높이 올리세요',k:'raise_both'},
-  {n:'점프!',      e:'🦘',d:'제자리에서 힘차게 점프하세요', k:'jump'},
-  {n:'오른손 번쩍!',e:'👋',d:'오른손을 어깨 위로 올리세요', k:'raise_right'},
-  {n:'왼손 번쩍!', e:'🤚',d:'왼손을 어깨 위로 올리세요',  k:'raise_left'},
-  {n:'팔 벌려!',   e:'🤸',d:'양팔을 옆으로 쭉 펴세요',    k:'arms_wide'},
-  {n:'몸 숙여!',   e:'🙇',d:'상체를 앞으로 숙이세요',      k:'bow'},
+  {n:'만세!',       e:'🙌', d:'양손을 머리 위로 높이 올리세요',         k:'raise_both'},
+  {n:'오른손 번쩍!', e:'👋', d:'오른손만 머리 위로 올리세요',            k:'raise_right'},
+  {n:'왼손 번쩍!',  e:'🤚', d:'왼손만 머리 위로 올리세요',             k:'raise_left'},
+  {n:'팔 벌려!',    e:'🤸', d:'양팔을 어깨 높이로 옆으로 쭉 펴세요',    k:'arms_wide'},
+  {n:'차렷!',       e:'🧍', d:'팔을 몸 옆에 붙이고 똑바로 서세요',      k:'attention'},
+  {n:'몸 숙여!',    e:'🙇', d:'상체를 앞으로 45도 이상 숙이세요',       k:'bow'},
+  {n:'양손 허리!',  e:'🕺', d:'양손을 허리에 올리세요',                k:'hands_hip'},
+  {n:'팔짱 껴!',    e:'🤐', d:'양팔을 가슴 앞에서 교차하세요',          k:'cross_arms'},
+  {n:'오른손 허리!', e:'💃', d:'오른손만 허리에 올리세요',               k:'right_hip'},
+  {n:'머리 감싸!',  e:'🙆', d:'양손을 머리 위에서 맞잡으세요',          k:'hands_head'},
 ];
-const DUR = 60;
+const DUR = 300; // 5분
 
 let ch, role='', myId='', myName='', room='';
 let players={}, lb=[];
@@ -254,7 +258,8 @@ function tStart(){
     s-=0.1;
     const pct=Math.max(0,s/DUR*100);
     const c=pct>50?'var(--g)':pct>25?'var(--a)':'var(--r)';
-    $('ttimer').textContent=Math.ceil(Math.max(0,s));
+    $('ttimer').textContent=Math.floor(Math.max(0,s)/60)+':'+String(Math.ceil(Math.max(0,s)%60)).padStart(2,'0');
+    $('ttimer').style.fontSize = '48px';
     $('ttimer').style.color=c;
     $('tbar').style.width=pct+'%';
     $('tbar').style.background=c;
@@ -305,7 +310,7 @@ function startGame(){
     s-=0.1;
     const pct=Math.max(0,s/DUR*100);
     const c=pct>50?'var(--g)':pct>25?'var(--a)':'var(--r)';
-    $('stm').textContent=Math.ceil(Math.max(0,s));
+    $('stm').textContent=Math.floor(Math.max(0,s)/60)+':'+String(Math.ceil(Math.max(0,s)%60)).padStart(2,'0');
     $('stm').style.color=c;
     $('sbar').style.width=pct+'%';
     $('sbar').style.background=c;
@@ -401,20 +406,75 @@ function loadPose(){
 function onPose(res){
   if(!res.poseLandmarks||dc)return;
   const L=res.poseLandmarks;
-  const[no,lw,rw,ls,rs,lh,rh]=[L[0],L[15],L[16],L[11],L[12],L[23],L[24]];
-  const mh=(lh.y+rh.y)/2;
+  const no=L[0];           // 코
+  const lw=L[15],rw=L[16]; // 손목
+  const le=L[13],re=L[14]; // 팔꿈치
+  const ls=L[11],rs=L[12]; // 어깨
+  const lh=L[23],rh=L[24]; // 엉덩이
+  const lk=L[25],rk=L[26]; // 무릎
+
+  const midSh=(ls.y+rs.y)/2;  // 어깨 중간 y
+  const midHip=(lh.y+rh.y)/2; // 엉덩이 중간 y
+  const shW=Math.abs(ls.x-rs.x); // 어깨 너비 (기준)
+
   let hit=false;
   const k=cur.k;
-  if(k==='raise_both') hit=lw.y<ls.y-.05&&rw.y<rs.y-.05&&lw.y<no.y&&rw.y<no.y;
-  else if(k==='raise_right') hit=rw.y<rs.y-.08&&rw.y<no.y;
-  else if(k==='raise_left')  hit=lw.y<ls.y-.08&&lw.y<no.y;
-  else if(k==='arms_wide')   hit=Math.abs(lw.x-rw.x)>.55&&Math.abs(lw.y-rw.y)<.2;
-  else if(k==='bow')         hit=no.y>(ls.y+rs.y)/2+.12;
-  else if(k==='jump'){
-    if(lastY!==null&&mh-lastY>.04&&!jc){hit=true;jc=true;setTimeout(()=>jc=false,800);}
-    lastY=mh;
+
+  if(k==='raise_both'){
+    // 양손이 코보다 위에 있어야 함
+    hit = lw.y < no.y && rw.y < no.y;
+
+  } else if(k==='raise_right'){
+    // 오른손이 코 위, 왼손은 어깨 아래
+    hit = rw.y < no.y && lw.y > ls.y;
+
+  } else if(k==='raise_left'){
+    // 왼손이 코 위, 오른손은 어깨 아래
+    hit = lw.y < no.y && rw.y > rs.y;
+
+  } else if(k==='arms_wide'){
+    // 양손이 어깨 너비의 1.5배 이상 벌어지고 어깨 높이 근처
+    const spread=Math.abs(lw.x-rw.x);
+    const lwLevel=Math.abs(lw.y-ls.y);
+    const rwLevel=Math.abs(rw.y-rs.y);
+    hit = spread > shW*1.5 && lwLevel < shW*0.5 && rwLevel < shW*0.5;
+
+  } else if(k==='attention'){
+    // 양손이 엉덩이 근처에 있고 몸 가까이
+    const lClose=Math.abs(lw.x-lh.x)<shW*0.4 && Math.abs(lw.y-lh.y)<shW*0.5;
+    const rClose=Math.abs(rw.x-rh.x)<shW*0.4 && Math.abs(rw.y-rh.y)<shW*0.5;
+    hit = lClose && rClose;
+
+  } else if(k==='bow'){
+    // 코가 어깨 y보다 아래에 있으면 숙인 것
+    hit = no.y > midSh + shW*0.3;
+
+  } else if(k==='hands_hip'){
+    // 양손이 엉덩이 높이 근처
+    const lHip=Math.abs(lw.y-lh.y)<shW*0.4;
+    const rHip=Math.abs(rw.y-rh.y)<shW*0.4;
+    hit = lHip && rHip;
+
+  } else if(k==='cross_arms'){
+    // 양손이 가슴 앞에서 교차 (손이 반대쪽 어깨 방향)
+    const inFront = lw.y > ls.y && lw.y < midHip && rw.y > rs.y && rw.y < midHip;
+    const crossed = lw.x > rs.x && rw.x < ls.x; // 손이 서로 교차
+    hit = inFront && crossed;
+
+  } else if(k==='right_hip'){
+    // 오른손만 허리, 왼손은 다른 곳
+    const rHip=Math.abs(rw.y-rh.y)<shW*0.4;
+    const lNotHip=Math.abs(lw.y-lh.y)>shW*0.4;
+    hit = rHip && lNotHip;
+
+  } else if(k==='hands_head'){
+    // 양손이 머리(코) 위에서 가까이 모임
+    const bothUp = lw.y < no.y && rw.y < no.y;
+    const close = Math.abs(lw.x-rw.x) < shW*0.6;
+    hit = bothUp && close;
   }
-  if(hit)okBtn();
+
+  if(hit) okBtn();
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
