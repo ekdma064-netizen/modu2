@@ -1,39 +1,4 @@
-// 판정 관련 상태
-let judging=false;       // 판정 중 여부
-let holdStart=null;      // 동작 유지 시작 시간
-const HOLD_MS=1000;      // 1초 유지해야 인정
-
-function closeJudge(){
-  judging=false;
-  holdStart=null;
-  dc=false;
-  $('judge-panel').style.display='none';
-  $('pose-status').style.display='block';
-  $('pose-status').textContent='동작을 따라 하세요!';
-  $('pose-status').style.color='var(--mu)';
-}
-
-function showJudge(correct){
-  judging=true;
-  dc=true;
-  $('judge-panel').style.display='block';
-  $('pose-status').style.display='none';
-  if(correct){
-    const pts=10*combo;
-    score+=pts; cnt++;
-    combo=Math.min(combo+1,5);
-    $('ssc').textContent=score;
-    $('scb').textContent='x'+combo;
-    $('judge-msg').innerHTML=`✅ 정확해요! <span style="color:var(--g)">+${pts}점</span>${combo>1?' 🔥'+combo+'콤보!':''}`;
-    $('judge-msg').style.color='var(--tx)';
-    ch.send({type:'broadcast',event:'student',payload:{t:'score',id:myId,score,combo,cnt}});
-    // 1.5초 후 자동으로 다음 동작
-    setTimeout(()=>{ closeJudge(); pickM(); }, 1500);
-  } else {
-    combo=1; $('scb').textContent='x1';
-    $('judge-msg').innerHTML='❌ 동작이 달라요!<br><span style="font-size:14px;color:var(--mu)">다시 해보거나 패스하세요</span>';
-  }
-}<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -66,7 +31,7 @@ input:focus{border-color:var(--g);}
 .pan h3{font-size:13px;color:var(--mu);margin-bottom:10px;}
 .rcode{font-size:32px;font-weight:500;letter-spacing:6px;color:var(--g);text-align:center;}
 .rurl{font-size:11px;color:var(--mu);text-align:center;word-break:break-all;margin-top:4px;}
-.bigt{font-size:64px;font-weight:500;text-align:center;line-height:1;margin-bottom:8px;}
+.bigt{font-size:48px;font-weight:500;text-align:center;line-height:1;margin-bottom:8px;}
 .bw{height:8px;background:#eee;border-radius:4px;overflow:hidden;margin-bottom:12px;}
 .bb{height:100%;border-radius:4px;transition:width .1s linear,background .3s;}
 .lr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--bd);}
@@ -85,8 +50,7 @@ input:focus{border-color:var(--g);}
 .cw video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 .cw canvas{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
 .cs{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:3px 10px;border-radius:99px;white-space:nowrap;}
-.ar{display:flex;gap:8px;margin-bottom:10px;}.ar .btn{margin:0;}
-.fb{text-align:center;font-size:26px;font-weight:500;min-height:36px;transition:opacity .3s;}
+.fb{text-align:center;font-size:22px;font-weight:500;min-height:32px;transition:opacity .3s;}
 .wb{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:10px;}
 .wb .em{font-size:64px;}.wb h2{font-size:22px;font-weight:500;}.wb p{font-size:14px;color:var(--mu);}
 #result{display:none;position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;padding:2rem 1rem;}
@@ -135,7 +99,7 @@ input:focus{border-color:var(--g);}
     <div class="pan">
       <div id="twait" style="text-align:center;padding:1rem;color:var(--mu);font-size:14px">학생들이 QR로 입장하면<br>여기 표시됩니다.</div>
       <div id="tplay" style="display:none">
-        <div class="bigt" id="ttimer">60</div>
+        <div class="bigt" id="ttimer">5:00</div>
         <div class="bw"><div class="bb" id="tbar" style="width:100%;background:var(--g)"></div></div>
       </div>
       <h3 id="tlbt">참가자</h3>
@@ -154,29 +118,35 @@ input:focus{border-color:var(--g);}
   <div id="sgame" style="display:none">
     <div class="hud">
       <div class="hi"><div class="hl">점수</div><div class="hv" id="ssc">0</div></div>
-      <div class="hi"><div class="hl">시간</div><div class="hv" id="stm" style="color:var(--g)">60</div></div>
+      <div class="hi"><div class="hl">시간</div><div class="hv" id="stm" style="color:var(--g)">5:00</div></div>
       <div class="hi"><div class="hl">콤보</div><div class="hv" id="scb">x1</div></div>
     </div>
     <div class="bw" style="margin-bottom:10px"><div class="bb" id="sbar" style="width:100%;background:var(--g)"></div></div>
+
     <div class="mb">
       <div class="me" id="sem">🙌</div>
       <div class="mn" id="smn">만세!</div>
       <div class="md" id="smd">양손을 머리 위로 올리세요</div>
     </div>
+
     <div class="cw">
       <video id="svid" autoplay playsinline muted></video>
       <canvas id="scan"></canvas>
       <div class="cs" id="scs">카메라 준비 중...</div>
     </div>
+
+    <!-- 동작 인식 상태 -->
     <div id="pose-status" style="text-align:center;padding:10px;font-size:15px;color:var(--mu);margin-bottom:8px">동작을 따라 하세요!</div>
-    <!-- 판정 패널: 평소엔 숨김 -->
+
+    <!-- 판정 패널 -->
     <div id="judge-panel" style="display:none;text-align:center;margin-bottom:10px">
-      <div id="judge-msg" style="font-size:22px;font-weight:500;margin-bottom:10px"></div>
+      <div id="judge-msg" style="font-size:20px;font-weight:500;margin-bottom:12px;line-height:1.5"></div>
       <div style="display:flex;gap:8px">
         <button class="btn green" id="btn-next" style="flex:1;margin:0">다음 동작 →</button>
-        <button class="btn out"   id="btn-retry" style="flex:1;margin:0">다시 해볼게요 🔄</button>
+        <button class="btn out" id="btn-retry" style="flex:1;margin:0">다시 할게요 🔄</button>
       </div>
     </div>
+
     <div class="fb" id="sfb"></div>
   </div>
 </div>
@@ -202,40 +172,68 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = createClient(SUPA_URL, SUPA_KEY);
 
 const MISS = [
-  {n:'만세!',       e:'🙌', d:'양손을 머리 위로 높이 올리세요',         k:'raise_both'},
-  {n:'오른손 번쩍!', e:'👋', d:'오른손만 머리 위로 올리세요',            k:'raise_right'},
-  {n:'왼손 번쩍!',  e:'🤚', d:'왼손만 머리 위로 올리세요',             k:'raise_left'},
-  {n:'팔 벌려!',    e:'🤸', d:'양팔을 어깨 높이로 옆으로 쭉 펴세요',    k:'arms_wide'},
-  {n:'차렷!',       e:'🧍', d:'팔을 몸 옆에 붙이고 똑바로 서세요',      k:'attention'},
-  {n:'몸 숙여!',    e:'🙇', d:'상체를 앞으로 45도 이상 숙이세요',       k:'bow'},
-  {n:'양손 허리!',  e:'🕺', d:'양손을 허리에 올리세요',                k:'hands_hip'},
-  {n:'팔짱 껴!',    e:'🤐', d:'양팔을 가슴 앞에서 교차하세요',          k:'cross_arms'},
-  {n:'오른손 허리!', e:'💃', d:'오른손만 허리에 올리세요',               k:'right_hip'},
-  {n:'머리 감싸!',  e:'🙆', d:'양손을 머리 위에서 맞잡으세요',          k:'hands_head'},
+  {n:'만세!',       e:'🙌', d:'양손을 머리 위로 높이 올리세요',       k:'raise_both'},
+  {n:'오른손 번쩍!', e:'👋', d:'오른손만 머리 위로 올리세요',          k:'raise_right'},
+  {n:'왼손 번쩍!',  e:'🤚', d:'왼손만 머리 위로 올리세요',            k:'raise_left'},
+  {n:'팔 벌려!',    e:'🤸', d:'양팔을 어깨 높이로 옆으로 쭉 펴세요',  k:'arms_wide'},
+  {n:'차렷!',       e:'🧍', d:'팔을 몸 옆에 붙이고 똑바로 서세요',    k:'attention'},
+  {n:'몸 숙여!',    e:'🙇', d:'상체를 앞으로 45도 이상 숙이세요',     k:'bow'},
+  {n:'양손 허리!',  e:'🕺', d:'양손을 허리에 올리세요',               k:'hands_hip'},
+  {n:'팔짱 껴!',    e:'🤐', d:'양팔을 가슴 앞에서 교차하세요',        k:'cross_arms'},
+  {n:'오른손 허리!', e:'💃', d:'오른손만 허리에 올리세요',              k:'right_hip'},
+  {n:'머리 감싸!',  e:'🙆', d:'양손을 머리 위에서 맞잡으세요',        k:'hands_head'},
 ];
-const DUR = 300; // 5분
+const DUR = 300;
 
 let ch, role='', myId='', myName='', room='';
 let players={}, lb=[];
 let score=0, combo=1, cnt=0, cur=MISS[0];
-let dc=false, jc=false, lastY=null;
+let judging=false, holdStart=null;
+const HOLD_MS = 1000;
 let timer=null, pose=null;
 
 const $=id=>document.getElementById(id);
 const ri=i=>['🥇','🥈','🥉'][i]??(i+1)+'위';
+const fmt=s=>Math.floor(s/60)+':'+String(Math.ceil(s%60)).padStart(2,'0');
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');}
 function msg(t,c='var(--r)'){$('emsg').textContent=t;$('emsg').style.color=c;}
 
-// URL 방코드 자동입력
 const p=new URLSearchParams(location.search);
 if(p.get('room'))$('icode').value=p.get('room').toUpperCase();
 
-// 버튼 이벤트
 $('btn-teacher').addEventListener('click', goTeacher);
 $('btn-student').addEventListener('click', goStudent);
 $('tsbtn').addEventListener('click', tStart);
-$('btn-next').addEventListener('click', ()=>{ closeJudge(); pickM(); });
+$('btn-next').addEventListener('click',  ()=>{ closeJudge(); pickM(); });
 $('btn-retry').addEventListener('click', ()=>{ closeJudge(); });
+
+// ── 판정 ──
+function closeJudge(){
+  judging=false; holdStart=null;
+  $('judge-panel').style.display='none';
+  $('pose-status').style.display='block';
+  $('pose-status').textContent='동작을 따라 하세요!';
+  $('pose-status').style.color='var(--mu)';
+}
+
+function showJudge(correct){
+  judging=true;
+  $('judge-panel').style.display='block';
+  $('pose-status').style.display='none';
+  if(correct){
+    const pts=10*combo;
+    score+=pts; cnt++;
+    combo=Math.min(combo+1,5);
+    $('ssc').textContent=score;
+    $('scb').textContent='x'+combo;
+    $('judge-msg').innerHTML=`✅ 정확해요!&nbsp;<span style="color:var(--g)">+${pts}점</span>${combo>1?' 🔥 '+combo+'콤보!':''}`;
+    ch.send({type:'broadcast',event:'student',payload:{t:'score',id:myId,score,combo,cnt}});
+    setTimeout(()=>{ closeJudge(); pickM(); }, 1500);
+  } else {
+    combo=1; $('scb').textContent='x1';
+    $('judge-msg').innerHTML='❌ 동작이 달라요!<br><span style="font-size:13px;color:var(--mu)">다시 해보거나 다음으로 넘어가세요</span>';
+  }
+}
 
 // ══ 선생님 ══
 async function goTeacher(){
@@ -243,25 +241,21 @@ async function goTeacher(){
   room=Math.random().toString(36).slice(2,8).toUpperCase();
   players={};
   msg('연결 중...','var(--g)');
-
-  ch = sb.channel('room-'+room, {config:{broadcast:{self:false}}});
-
+  ch=sb.channel('room-'+room,{config:{broadcast:{self:false}}});
   ch.on('broadcast',{event:'student'},({payload})=>{
     if(payload.t==='join'){
       players[payload.id]={name:payload.name,score:0,combo:1,cnt:0};
       renderLB();
     }
-    if(payload.t==='score' && players[payload.id]){
+    if(payload.t==='score'&&players[payload.id]){
       players[payload.id].score=payload.score;
       players[payload.id].combo=payload.combo;
       players[payload.id].cnt=payload.cnt;
       renderLB();
     }
   });
-
-  await new Promise(res=>ch.subscribe(s=>{ if(s==='SUBSCRIBED') res(); }));
+  await new Promise(res=>ch.subscribe(s=>{if(s==='SUBSCRIBED')res();}));
   msg('');
-
   show('teacher');
   $('tbadge').textContent=room;
   $('tcode').textContent=room;
@@ -298,8 +292,7 @@ function tStart(){
     s-=0.1;
     const pct=Math.max(0,s/DUR*100);
     const c=pct>50?'var(--g)':pct>25?'var(--a)':'var(--r)';
-    $('ttimer').textContent=Math.floor(Math.max(0,s)/60)+':'+String(Math.ceil(Math.max(0,s)%60)).padStart(2,'0');
-    $('ttimer').style.fontSize = '48px';
+    $('ttimer').textContent=fmt(Math.max(0,s));
     $('ttimer').style.color=c;
     $('tbar').style.width=pct+'%';
     $('tbar').style.background=c;
@@ -319,9 +312,7 @@ async function goStudent(){
   myName=name; room=code; role='student';
   myId='s'+Date.now()+Math.random().toString(36).slice(2,5);
   msg('연결 중...','var(--g)');
-
-  ch = sb.channel('room-'+code, {config:{broadcast:{self:false}}});
-
+  ch=sb.channel('room-'+code,{config:{broadcast:{self:false}}});
   ch.on('broadcast',{event:'teacher'},({payload})=>{
     if(payload.t==='start') startGame();
     if(payload.t==='end'){
@@ -329,18 +320,16 @@ async function goStudent(){
       showResult();
     }
   });
-
-  await new Promise(res=>ch.subscribe(s=>{ if(s==='SUBSCRIBED') res(); }));
+  await new Promise(res=>ch.subscribe(s=>{if(s==='SUBSCRIBED')res();}));
   ch.send({type:'broadcast',event:'student',payload:{t:'join',id:myId,name}});
   msg('');
-
   show('student');
   $('swname').textContent=name+'님, 잠깐만 기다려요!';
   $('sstat').textContent='연결 완료! 선생님을 기다리는 중...';
 }
 
 function startGame(){
-  score=0;combo=1;cnt=0;
+  score=0; combo=1; cnt=0;
   $('swait').style.display='none';
   $('sgame').style.display='block';
   pickM();
@@ -350,7 +339,7 @@ function startGame(){
     s-=0.1;
     const pct=Math.max(0,s/DUR*100);
     const c=pct>50?'var(--g)':pct>25?'var(--a)':'var(--r)';
-    $('stm').textContent=Math.floor(Math.max(0,s)/60)+':'+String(Math.ceil(Math.max(0,s)%60)).padStart(2,'0');
+    $('stm').textContent=fmt(Math.max(0,s));
     $('stm').style.color=c;
     $('sbar').style.width=pct+'%';
     $('sbar').style.background=c;
@@ -365,34 +354,10 @@ function pickM(){
   $('sem').textContent=m.e;
   $('smn').textContent=m.n;
   $('smd').textContent=m.d;
-  dc=false;
+  holdStart=null;
 }
 
-function okBtn(){
-  if(dc)return; dc=true;
-  const pts=10*combo;
-  score+=pts;cnt++;
-  combo=Math.min(combo+1,5);
-  $('ssc').textContent=score;
-  $('scb').textContent='x'+combo;
-  fb('+'+pts+'점! '+(combo>1?combo+'콤보!':''),'var(--g)');
-  ch.send({type:'broadcast',event:'student',payload:{t:'score',id:myId,score,combo,cnt}});
-  setTimeout(pickM,700);
-}
-
-function skip(){
-  combo=1;$('scb').textContent='x1';
-  fb('건너뜀...','var(--mu)');
-  dc=true;
-  setTimeout(pickM,500);
-}
-
-function fb(t,c){
-  const e=$('sfb');
-  e.textContent=t;e.style.color=c;e.style.opacity=1;
-  setTimeout(()=>{e.style.opacity=0;},900);
-}
-
+// ── 결과 ──
 function showResult(){
   clearInterval(timer);
   if(pose){try{pose.close();}catch{}}
@@ -415,42 +380,42 @@ function showResult(){
     </div>`).join('');
 }
 
-// ══ 카메라 ══
+// ── 카메라 ──
 async function setupCam(){
   try{
     const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
     $('svid').srcObject=st;
     $('scs').textContent='AI 인식 로딩 중...';
     loadPose();
-  }catch{$('scs').textContent='카메라 없음 – 버튼으로 완료하세요';}
+  }catch{$('scs').textContent='카메라 없음';}
 }
 
 function loadPose(){
-  if(!window.Pose){$('scs').textContent='버튼으로 완료하세요';return;}
+  if(!window.Pose){$('scs').textContent='카메라 인식 불가';return;}
   pose=new window.Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`});
   pose.setOptions({modelComplexity:0,smoothLandmarks:true,minDetectionConfidence:.5,minTrackingConfidence:.5});
   pose.onResults(onPose);
   pose.initialize().then(()=>{
-    $('scs').textContent='준비 완료! 동작을 따라 하세요';
+    $('scs').textContent='준비 완료!';
     const v=$('svid'),c=$('scan');
     async function det(){
       if(!pose)return;
-      c.width=v.videoWidth||320;c.height=v.videoHeight||240;
+      c.width=v.videoWidth||320; c.height=v.videoHeight||240;
       await pose.send({image:v});
       requestAnimationFrame(det);
     }
     v.onloadeddata=()=>requestAnimationFrame(det);
-  }).catch(()=>{$('scs').textContent='버튼으로 완료하세요';});
+  }).catch(()=>{$('scs').textContent='인식 불가';});
 }
 
+// ── 포즈 판별 ──
 function onPose(res){
-  if(!res.poseLandmarks || judging) return;
+  if(!res.poseLandmarks||judging)return;
   const L=res.poseLandmarks;
   const no=L[0];
   const lw=L[15],rw=L[16];
   const ls=L[11],rs=L[12];
   const lh=L[23],rh=L[24];
-
   const midSh=(ls.y+rs.y)/2;
   const midHip=(lh.y+rh.y)/2;
   const shW=Math.abs(ls.x-rs.x)||0.1;
@@ -458,31 +423,33 @@ function onPose(res){
   let hit=false;
   const k=cur.k;
 
-  if(k==='raise_both')      hit = lw.y<no.y && rw.y<no.y;
-  else if(k==='raise_right') hit = rw.y<no.y && lw.y>ls.y;
-  else if(k==='raise_left')  hit = lw.y<no.y && rw.y>rs.y;
-  else if(k==='arms_wide'){
-    const spread=Math.abs(lw.x-rw.x);
-    hit = spread>shW*1.5 && Math.abs(lw.y-ls.y)<shW*0.5 && Math.abs(rw.y-rs.y)<shW*0.5;
-  }
-  else if(k==='attention'){
+  if(k==='raise_both')
+    hit = lw.y<no.y && rw.y<no.y;
+  else if(k==='raise_right')
+    hit = rw.y<no.y && lw.y>ls.y;
+  else if(k==='raise_left')
+    hit = lw.y<no.y && rw.y>rs.y;
+  else if(k==='arms_wide')
+    hit = Math.abs(lw.x-rw.x)>shW*1.5
+       && Math.abs(lw.y-ls.y)<shW*0.5
+       && Math.abs(rw.y-rs.y)<shW*0.5;
+  else if(k==='attention')
     hit = Math.abs(lw.x-lh.x)<shW*0.4 && Math.abs(lw.y-lh.y)<shW*0.5
        && Math.abs(rw.x-rh.x)<shW*0.4 && Math.abs(rw.y-rh.y)<shW*0.5;
-  }
-  else if(k==='bow')         hit = no.y > midSh+shW*0.3;
-  else if(k==='hands_hip')   hit = Math.abs(lw.y-lh.y)<shW*0.4 && Math.abs(rw.y-rh.y)<shW*0.4;
-  else if(k==='cross_arms'){
+  else if(k==='bow')
+    hit = no.y > midSh+shW*0.3;
+  else if(k==='hands_hip')
+    hit = Math.abs(lw.y-lh.y)<shW*0.4 && Math.abs(rw.y-rh.y)<shW*0.4;
+  else if(k==='cross_arms')
     hit = lw.y>ls.y && lw.y<midHip && rw.y>rs.y && rw.y<midHip
        && lw.x>rs.x && rw.x<ls.x;
-  }
-  else if(k==='right_hip')   hit = Math.abs(rw.y-rh.y)<shW*0.4 && Math.abs(lw.y-lh.y)>shW*0.4;
-  else if(k==='hands_head'){
+  else if(k==='right_hip')
+    hit = Math.abs(rw.y-rh.y)<shW*0.4 && Math.abs(lw.y-lh.y)>shW*0.4;
+  else if(k==='hands_head')
     hit = lw.y<no.y && rw.y<no.y && Math.abs(lw.x-rw.x)<shW*0.6;
-  }
 
   const ps=$('pose-status');
   if(hit){
-    // 1초 유지 판정
     if(!holdStart) holdStart=Date.now();
     const held=Date.now()-holdStart;
     const pct=Math.min(100,Math.round(held/HOLD_MS*100));
