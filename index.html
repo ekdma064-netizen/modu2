@@ -169,7 +169,7 @@ const MISS = [
 ];
 const DUR = 60;
 
-const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
 let ch; // Supabase 채널
 let role='', myId='', myName='', room='';
@@ -287,7 +287,7 @@ async function goStudent(){
   myId='s'+Date.now()+Math.random().toString(36).slice(2,5);
   msg('연결 중...','var(--g)');
 
-  ch = supabase.channel('room-'+code, {
+  ch = sb.channel('room-'+code, {
     config: { broadcast: { self: false } }
   });
 
