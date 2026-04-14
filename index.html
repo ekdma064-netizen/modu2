@@ -1,4 +1,39 @@
-<!DOCTYPE html>
+// 판정 관련 상태
+let judging=false;       // 판정 중 여부
+let holdStart=null;      // 동작 유지 시작 시간
+const HOLD_MS=1000;      // 1초 유지해야 인정
+
+function closeJudge(){
+  judging=false;
+  holdStart=null;
+  dc=false;
+  $('judge-panel').style.display='none';
+  $('pose-status').style.display='block';
+  $('pose-status').textContent='동작을 따라 하세요!';
+  $('pose-status').style.color='var(--mu)';
+}
+
+function showJudge(correct){
+  judging=true;
+  dc=true;
+  $('judge-panel').style.display='block';
+  $('pose-status').style.display='none';
+  if(correct){
+    const pts=10*combo;
+    score+=pts; cnt++;
+    combo=Math.min(combo+1,5);
+    $('ssc').textContent=score;
+    $('scb').textContent='x'+combo;
+    $('judge-msg').innerHTML=`✅ 정확해요! <span style="color:var(--g)">+${pts}점</span>${combo>1?' 🔥'+combo+'콤보!':''}`;
+    $('judge-msg').style.color='var(--tx)';
+    ch.send({type:'broadcast',event:'student',payload:{t:'score',id:myId,score,combo,cnt}});
+    // 1.5초 후 자동으로 다음 동작
+    setTimeout(()=>{ closeJudge(); pickM(); }, 1500);
+  } else {
+    combo=1; $('scb').textContent='x1';
+    $('judge-msg').innerHTML='❌ 동작이 달라요!<br><span style="font-size:14px;color:var(--mu)">다시 해보거나 패스하세요</span>';
+  }
+}<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -134,6 +169,14 @@ input:focus{border-color:var(--g);}
       <div class="cs" id="scs">카메라 준비 중...</div>
     </div>
     <div id="pose-status" style="text-align:center;padding:10px;font-size:15px;color:var(--mu);margin-bottom:8px">동작을 따라 하세요!</div>
+    <!-- 판정 패널: 평소엔 숨김 -->
+    <div id="judge-panel" style="display:none;text-align:center;margin-bottom:10px">
+      <div id="judge-msg" style="font-size:22px;font-weight:500;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn green" id="btn-next" style="flex:1;margin:0">다음 동작 →</button>
+        <button class="btn out"   id="btn-retry" style="flex:1;margin:0">다시 해볼게요 🔄</button>
+      </div>
+    </div>
     <div class="fb" id="sfb"></div>
   </div>
 </div>
@@ -191,6 +234,8 @@ if(p.get('room'))$('icode').value=p.get('room').toUpperCase();
 $('btn-teacher').addEventListener('click', goTeacher);
 $('btn-student').addEventListener('click', goStudent);
 $('tsbtn').addEventListener('click', tStart);
+$('btn-next').addEventListener('click', ()=>{ closeJudge(); pickM(); });
+$('btn-retry').addEventListener('click', ()=>{ closeJudge(); });
 
 // ══ 선생님 ══
 async function goTeacher(){
@@ -399,67 +444,56 @@ function loadPose(){
 }
 
 function onPose(res){
-  if(!res.poseLandmarks||dc)return;
+  if(!res.poseLandmarks || judging) return;
   const L=res.poseLandmarks;
   const no=L[0];
   const lw=L[15],rw=L[16];
-  const le=L[13],re=L[14];
   const ls=L[11],rs=L[12];
   const lh=L[23],rh=L[24];
 
   const midSh=(ls.y+rs.y)/2;
   const midHip=(lh.y+rh.y)/2;
-  const shW=Math.abs(ls.x-rs.x);
+  const shW=Math.abs(ls.x-rs.x)||0.1;
 
   let hit=false;
   const k=cur.k;
 
-  if(k==='raise_both'){
-    hit = lw.y < no.y && rw.y < no.y;
-  } else if(k==='raise_right'){
-    hit = rw.y < no.y && lw.y > ls.y;
-  } else if(k==='raise_left'){
-    hit = lw.y < no.y && rw.y > rs.y;
-  } else if(k==='arms_wide'){
+  if(k==='raise_both')      hit = lw.y<no.y && rw.y<no.y;
+  else if(k==='raise_right') hit = rw.y<no.y && lw.y>ls.y;
+  else if(k==='raise_left')  hit = lw.y<no.y && rw.y>rs.y;
+  else if(k==='arms_wide'){
     const spread=Math.abs(lw.x-rw.x);
-    const lwLevel=Math.abs(lw.y-ls.y);
-    const rwLevel=Math.abs(rw.y-rs.y);
-    hit = spread > shW*1.5 && lwLevel < shW*0.5 && rwLevel < shW*0.5;
-  } else if(k==='attention'){
-    const lClose=Math.abs(lw.x-lh.x)<shW*0.4 && Math.abs(lw.y-lh.y)<shW*0.5;
-    const rClose=Math.abs(rw.x-rh.x)<shW*0.4 && Math.abs(rw.y-rh.y)<shW*0.5;
-    hit = lClose && rClose;
-  } else if(k==='bow'){
-    hit = no.y > midSh + shW*0.3;
-  } else if(k==='hands_hip'){
-    const lHip=Math.abs(lw.y-lh.y)<shW*0.4;
-    const rHip=Math.abs(rw.y-rh.y)<shW*0.4;
-    hit = lHip && rHip;
-  } else if(k==='cross_arms'){
-    const inFront = lw.y > ls.y && lw.y < midHip && rw.y > rs.y && rw.y < midHip;
-    const crossed = lw.x > rs.x && rw.x < ls.x;
-    hit = inFront && crossed;
-  } else if(k==='right_hip'){
-    const rHip=Math.abs(rw.y-rh.y)<shW*0.4;
-    const lNotHip=Math.abs(lw.y-lh.y)>shW*0.4;
-    hit = rHip && lNotHip;
-  } else if(k==='hands_head'){
-    const bothUp = lw.y < no.y && rw.y < no.y;
-    const close = Math.abs(lw.x-rw.x) < shW*0.6;
-    hit = bothUp && close;
+    hit = spread>shW*1.5 && Math.abs(lw.y-ls.y)<shW*0.5 && Math.abs(rw.y-rs.y)<shW*0.5;
+  }
+  else if(k==='attention'){
+    hit = Math.abs(lw.x-lh.x)<shW*0.4 && Math.abs(lw.y-lh.y)<shW*0.5
+       && Math.abs(rw.x-rh.x)<shW*0.4 && Math.abs(rw.y-rh.y)<shW*0.5;
+  }
+  else if(k==='bow')         hit = no.y > midSh+shW*0.3;
+  else if(k==='hands_hip')   hit = Math.abs(lw.y-lh.y)<shW*0.4 && Math.abs(rw.y-rh.y)<shW*0.4;
+  else if(k==='cross_arms'){
+    hit = lw.y>ls.y && lw.y<midHip && rw.y>rs.y && rw.y<midHip
+       && lw.x>rs.x && rw.x<ls.x;
+  }
+  else if(k==='right_hip')   hit = Math.abs(rw.y-rh.y)<shW*0.4 && Math.abs(lw.y-lh.y)>shW*0.4;
+  else if(k==='hands_head'){
+    hit = lw.y<no.y && rw.y<no.y && Math.abs(lw.x-rw.x)<shW*0.6;
   }
 
-  // 실시간 피드백 표시
-  const ps = document.getElementById('pose-status');
+  const ps=$('pose-status');
   if(hit){
-    ps.textContent = '✅ 동작 인식됨!';
-    ps.style.color = 'var(--g)';
+    // 1초 유지 판정
+    if(!holdStart) holdStart=Date.now();
+    const held=Date.now()-holdStart;
+    const pct=Math.min(100,Math.round(held/HOLD_MS*100));
+    ps.textContent=`✅ 동작 유지 중... ${pct}%`;
+    ps.style.color='var(--g)';
+    if(held>=HOLD_MS) showJudge(true);
   } else {
-    ps.textContent = '동작을 따라 하세요!';
-    ps.style.color = 'var(--mu)';
+    holdStart=null;
+    ps.textContent='동작을 따라 하세요!';
+    ps.style.color='var(--mu)';
   }
-
-  if(hit) okBtn();
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
