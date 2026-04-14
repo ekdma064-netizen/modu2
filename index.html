@@ -83,7 +83,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         style="font-size:20px;letter-spacing:6px;font-weight:500"/>
     </div>
     <button class="btn btn-outline" onclick="goStudent()">학생 – 게임 참가</button>
-    <p id="err-msg" style="color:var(--red);font-size:13px;margin-top:8px;"></p>
+    <p id="err-msg" style="font-size:13px;margin-top:8px;"></p>
   </div>
 </div>
 
@@ -184,54 +184,58 @@ let timerInterval=null, poseInstance=null;
 
 function rankIcon(i){return['🥇','🥈','🥉'][i]??(i+1)+'위';}
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function setErr(msg, color='var(--red)'){const el=document.getElementById('err-msg');el.textContent=msg;el.style.color=color;}
 
 const params=new URLSearchParams(location.search);
 if(params.get('room')) document.getElementById('inp-code').value=params.get('room').toUpperCase();
 
 async function initAbly(code){
-  ably = new Ably.Realtime(ABLY_KEY);
-  await new Promise(r=>ably.connection.once('connected',r));
-  channel = ably.channels.get('room-'+code);
+  ably = new Ably.Realtime({ key: ABLY_KEY });
+  await new Promise((resolve, reject)=>{
+    const t = setTimeout(()=>reject(new Error('연결 시간 초과')), 10000);
+    ably.connection.once('connected', ()=>{ clearTimeout(t); resolve(); });
+    ably.connection.once('failed', (err)=>{ clearTimeout(t); reject(err); });
+  });
+  channel = ably.channels.get('sport-room-' + code);
 }
 
 // ══ TEACHER ══
 async function goTeacher(){
-  role='teacher';
-  myId='teacher';
-  roomCode=Math.random().toString(36).substring(2,8).toUpperCase();
-  players={};
-  await initAbly(roomCode);
+  role='teacher'; myId='teacher';
+  roomCode = Math.random().toString(36).substring(2,8).toUpperCase();
+  players = {};
+  setErr('연결 중...', 'var(--green)');
+  try { await initAbly(roomCode); } catch(e){ setErr('연결 실패: '+e.message); return; }
+  setErr('');
 
   channel.subscribe(msg=>{
-    const d=msg.data;
+    const d = msg.data;
     if(d.type==='join'){
-      players[d.id]={name:d.name,score:0,combo:1,count:0};
+      players[d.id] = {name:d.name, score:0, combo:1, count:0};
       updateLB();
-      channel.publish({data:{type:'joined_ok',targetId:d.id}});
+      channel.publish('msg', {type:'joined_ok', targetId:d.id});
     }
-    if(d.type==='score'){
-      if(players[d.id]){
-        players[d.id].score=d.score;
-        players[d.id].combo=d.combo;
-        players[d.id].count=d.count;
-        updateLB();
-      }
+    if(d.type==='score' && players[d.id]){
+      players[d.id].score = d.score;
+      players[d.id].combo = d.combo;
+      players[d.id].count = d.count;
+      updateLB();
     }
   });
 
   show('teacher');
-  document.getElementById('t-badge').textContent=roomCode;
-  document.getElementById('t-code').textContent=roomCode;
-  const joinURL=location.origin+location.pathname+'?room='+roomCode;
-  document.getElementById('t-url').textContent=joinURL;
+  document.getElementById('t-badge').textContent = roomCode;
+  document.getElementById('t-code').textContent = roomCode;
+  const joinURL = location.origin + location.pathname + '?room=' + roomCode;
+  document.getElementById('t-url').textContent = joinURL;
   new QRCode(document.getElementById('qr-img'),{text:joinURL,width:150,height:150,correctLevel:QRCode.CorrectLevel.M});
 }
 
 function updateLB(){
-  leaderboard=Object.entries(players).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
-  document.getElementById('t-count').textContent=leaderboard.length+'명';
-  const max=leaderboard[0]?.score||1;
-  document.getElementById('t-lb').innerHTML=leaderboard.map((p,i)=>`
+  leaderboard = Object.entries(players).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
+  document.getElementById('t-count').textContent = leaderboard.length+'명';
+  const max = leaderboard[0]?.score||1;
+  document.getElementById('t-lb').innerHTML = leaderboard.map((p,i)=>`
     <div class="lb-row">
       <div class="lb-rank">${rankIcon(i)}</div>
       <div class="lb-info">
@@ -244,7 +248,7 @@ function updateLB(){
 }
 
 function teacherStart(){
-  channel.publish({data:{type:'game_start'}});
+  channel.publish('msg', {type:'game_start'});
   document.getElementById('t-start-btn').style.display='none';
   document.getElementById('t-reset-btn').style.display='';
   document.getElementById('t-waiting').style.display='none';
@@ -258,42 +262,40 @@ function teacherStart(){
     document.getElementById('t-timer').style.color=color;
     document.getElementById('t-bar').style.width=pct+'%';
     document.getElementById('t-bar').style.background=color;
-    if(t<=0){ clearInterval(timerInterval); channel.publish({data:{type:'game_end',players}}); showResult(); }
+    if(t<=0){ clearInterval(timerInterval); channel.publish('msg',{type:'game_end',players}); showResult(); }
   },100);
 }
 
 // ══ STUDENT ══
 async function goStudent(){
-  const name=document.getElementById('inp-name').value.trim();
-  const code=document.getElementById('inp-code').value.trim().toUpperCase();
-  if(!name||!code){document.getElementById('err-msg').textContent='이름과 방 코드를 입력해 주세요!';return;}
+  const name = document.getElementById('inp-name').value.trim();
+  const code = document.getElementById('inp-code').value.trim().toUpperCase();
+  if(!name||!code){ setErr('이름과 방 코드를 입력해 주세요!'); return; }
   myName=name; roomCode=code; role='student';
-  myId='s-'+Date.now()+Math.random().toString(36).slice(2,5);
+  myId = 's-'+Date.now()+Math.random().toString(36).slice(2,5);
+  setErr('연결 중...', 'var(--green)');
+  try { await initAbly(code); } catch(e){ setErr('연결 실패: '+e.message); return; }
+  setErr('');
 
-  document.getElementById('err-msg').textContent='연결 중...';
-  document.getElementById('err-msg').style.color='var(--green)';
-  try {
-    await initAbly(code);
-  } catch(e) {
-    document.getElementById('err-msg').textContent='연결 실패: '+e.message;
-    document.getElementById('err-msg').style.color='var(--red)';
-    return;
-  }
   show('student');
-  document.getElementById('s-wait-name').textContent=name+'님, 잠깐만 기다려요!';
-  document.getElementById('s-conn-status').textContent='연결 완료! 선생님을 기다리는 중...';
+  document.getElementById('s-wait-name').textContent = name+'님, 잠깐만 기다려요!';
+  document.getElementById('s-conn-status').textContent = '연결 완료! 선생님을 기다리는 중...';
 
-  channel.publish({data:{type:'join',id:myId,name}});
-
-  channel.subscribe(msg=>{
-    const d=msg.data;
+  channel.subscribe('msg', msg=>{
+    const d = msg.data;
     if(d.type==='game_start') startStudentGame();
-    if(d.type==='game_end'){ leaderboard=Object.entries(d.players||{}).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score); showResult(); }
+    if(d.type==='game_end'){
+      leaderboard = Object.entries(d.players||{}).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
+      showResult();
+    }
   });
+
+  // 입장 알림
+  channel.publish('msg', {type:'join', id:myId, name});
 }
 
 function startStudentGame(){
-  score=0;combo=1;missionCount=0;
+  score=0; combo=1; missionCount=0;
   document.getElementById('s-wait').style.display='none';
   document.getElementById('s-game').style.display='block';
   pickMission();
@@ -324,12 +326,12 @@ function successMission(){
   if(detCooldown)return;
   detCooldown=true;
   const pts=10*combo;
-  score+=pts;missionCount++;
+  score+=pts; missionCount++;
   combo=Math.min(combo+1,5);
   document.getElementById('s-score').textContent=score;
   document.getElementById('s-combo').textContent='x'+combo;
   showFeedback('+'+pts+'점! '+(combo>1?combo+'콤보!':''),'var(--green)');
-  channel.publish({data:{type:'score',id:myId,score,combo,count:missionCount}});
+  channel.publish('msg',{type:'score',id:myId,score,combo,count:missionCount});
   setTimeout(pickMission,700);
 }
 
@@ -342,11 +344,10 @@ function skipMission(){
 
 function showFeedback(txt,color){
   const el=document.getElementById('s-feedback');
-  el.textContent=txt;el.style.color=color;el.style.opacity=1;
+  el.textContent=txt; el.style.color=color; el.style.opacity=1;
   setTimeout(()=>{el.style.opacity=0;},900);
 }
 
-// ══ RESULT ══
 function showResult(){
   clearInterval(timerInterval);
   if(poseInstance){try{poseInstance.close();}catch{}}
@@ -369,7 +370,6 @@ function showResult(){
     </div>`).join('');
 }
 
-// ══ CAMERA ══
 async function setupCamera(){
   try{
     const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
@@ -391,7 +391,7 @@ function loadPose(){
     const canvas=document.getElementById('s-canvas');
     async function detect(){
       if(!poseInstance)return;
-      canvas.width=video.videoWidth||320;canvas.height=video.videoHeight||240;
+      canvas.width=video.videoWidth||320; canvas.height=video.videoHeight||240;
       await poseInstance.send({image:video});
       requestAnimationFrame(detect);
     }
