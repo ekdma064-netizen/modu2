@@ -208,12 +208,11 @@ async function goTeacher(){
   try { await initAbly(roomCode); } catch(e){ setErr('연결 실패: '+e.message); return; }
   setErr('');
 
-  channel.subscribe(msg=>{
+  channel.subscribe('msg', msg=>{
     const d = msg.data;
     if(d.type==='join'){
       players[d.id] = {name:d.name, score:0, combo:1, count:0};
       updateLB();
-      channel.publish('msg', {type:'joined_ok', targetId:d.id});
     }
     if(d.type==='score' && players[d.id]){
       players[d.id].score = d.score;
