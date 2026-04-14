@@ -270,7 +270,15 @@ async function goStudent(){
   myName=name; roomCode=code; role='student';
   myId='s-'+Date.now()+Math.random().toString(36).slice(2,5);
 
-  await initAbly(code);
+  document.getElementById('err-msg').textContent='연결 중...';
+  document.getElementById('err-msg').style.color='var(--green)';
+  try {
+    await initAbly(code);
+  } catch(e) {
+    document.getElementById('err-msg').textContent='연결 실패: '+e.message;
+    document.getElementById('err-msg').style.color='var(--red)';
+    return;
+  }
   show('student');
   document.getElementById('s-wait-name').textContent=name+'님, 잠깐만 기다려요!';
   document.getElementById('s-conn-status').textContent='연결 완료! 선생님을 기다리는 중...';
