@@ -252,6 +252,7 @@ async function goTeacher(){
   room=Math.random().toString(36).slice(2,8).toUpperCase();
   players={};
   msg('연결 중...','var(--g)');
+
   ch=sb.channel('room-'+room,{config:{broadcast:{self:false}}});
   ch.on('broadcast',{event:'student'},({payload})=>{
     if(payload.t==='join'){
@@ -265,7 +266,17 @@ async function goTeacher(){
       renderLB();
     }
   });
-  await new Promise(res=>ch.subscribe(s=>{if(s==='SUBSCRIBED')res();}));
+
+  try {
+    await Promise.race([
+      new Promise(res=>ch.subscribe(s=>{ if(s==='SUBSCRIBED') res(); })),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('연결 시간 초과')),8000))
+    ]);
+  } catch(e) {
+    msg('연결 실패: '+e.message+' — 새로고침 후 다시 시도해 주세요.');
+    return;
+  }
+
   msg('');
   show('teacher');
   $('tbadge').textContent=room;
@@ -331,7 +342,15 @@ async function goStudent(){
       showResult();
     }
   });
-  await new Promise(res=>ch.subscribe(s=>{if(s==='SUBSCRIBED')res();}));
+  try {
+    await Promise.race([
+      new Promise(res=>ch.subscribe(s=>{ if(s==='SUBSCRIBED') res(); })),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('연결 시간 초과')),8000))
+    ]);
+  } catch(e) {
+    msg('연결 실패: '+e.message+' — 새로고침 후 다시 시도해 주세요.');
+    return;
+  }
   ch.send({type:'broadcast',event:'student',payload:{t:'join',id:myId,name}});
   msg('');
   show('student');
