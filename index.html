@@ -280,17 +280,20 @@ async function goStudent(){
   document.getElementById('s-wait-name').textContent = name+'님, 잠깐만 기다려요!';
   document.getElementById('s-conn-status').textContent = '연결 완료! 선생님을 기다리는 중...';
 
+  // 입장 알림 먼저 보내고
+  await channel.publish('msg', {type:'join', id:myId, name});
+
+  // 그 다음 구독 (선생님→학생 메시지만 처리)
   channel.subscribe('msg', msg=>{
     const d = msg.data;
+    // 내가 보낸 메시지는 무시
+    if(d.id === myId || d.type === 'join' || d.type === 'score') return;
     if(d.type==='game_start') startStudentGame();
     if(d.type==='game_end'){
       leaderboard = Object.entries(d.players||{}).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
       showResult();
     }
   });
-
-  // 입장 알림
-  channel.publish('msg', {type:'join', id:myId, name});
 }
 
 function startStudentGame(){
