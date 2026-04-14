@@ -391,26 +391,43 @@ async function setupCam(){
 }
 
 function loadPose(){
-  if(!window.Pose){$('scs').textContent='카메라 인식 불가';return;}
-  pose=new window.Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`});
-  pose.setOptions({modelComplexity:0,smoothLandmarks:true,minDetectionConfidence:.5,minTrackingConfidence:.5});
-  pose.onResults(onPose);
-  pose.initialize().then(()=>{
-    $('scs').textContent='준비 완료!';
-    const v=$('svid'),c=$('scan');
-    async function det(){
-      if(!pose)return;
-      c.width=v.videoWidth||320; c.height=v.videoHeight||240;
-      await pose.send({image:v});
-      requestAnimationFrame(det);
+  const tryLoad=()=>{
+    if(!window.Pose){
+      $('scs').textContent='AI 로딩 중...';
+      setTimeout(tryLoad, 500);
+      return;
     }
-    v.onloadeddata=()=>requestAnimationFrame(det);
-  }).catch(()=>{$('scs').textContent='인식 불가';});
+    $('scs').textContent='AI 초기화 중...';
+    pose=new window.Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`});
+    pose.setOptions({modelComplexity:0,smoothLandmarks:true,minDetectionConfidence:.5,minTrackingConfidence:.5});
+    pose.onResults(onPose);
+    pose.initialize().then(()=>{
+      $('scs').textContent='준비 완료! 동작을 따라 하세요';
+      const v=$('svid'),c=$('scan');
+      async function det(){
+        if(!pose)return;
+        c.width=v.videoWidth||320; c.height=v.videoHeight||240;
+        try{ await pose.send({image:v}); }catch{}
+        requestAnimationFrame(det);
+      }
+      if(v.readyState>=2) requestAnimationFrame(det);
+      else v.onloadeddata=()=>requestAnimationFrame(det);
+    }).catch(e=>{
+      console.error('Pose init error:',e);
+      $('scs').textContent='AI 인식 실패 - 새로고침 해주세요';
+    });
+  };
+  tryLoad();
 }
 
 // ── 포즈 판별 ──
 function onPose(res){
-  if(!res.poseLandmarks||judging)return;
+  if(!res.poseLandmarks){
+    $('pose-status').textContent='사람을 인식하지 못했어요. 카메라에서 멀리 서세요.';
+    return;
+  }
+  if(judging) return;
+
   const L=res.poseLandmarks;
   const no=L[0];
   const lw=L[15],rw=L[16];
@@ -458,7 +475,8 @@ function onPose(res){
     if(held>=HOLD_MS) showJudge(true);
   } else {
     holdStart=null;
-    ps.textContent='동작을 따라 하세요!';
+    // 디버그: 현재 관절 값 표시
+    ps.textContent=`인식중 (${k}) | 코y:${no.y.toFixed(2)} 왼손y:${lw.y.toFixed(2)} 오른손y:${rw.y.toFixed(2)}`;
     ps.style.color='var(--mu)';
   }
 }
