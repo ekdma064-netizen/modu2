@@ -174,7 +174,12 @@ const MISSIONS = [
 ];
 const DURATION = 60;
 
-let ably, channel;
+// 선생님용 채널: teacher-{code}
+// 학생용 채널:   student-{code}
+// 선생님은 student 채널 구독 (학생 메시지 수신)
+// 학생은 teacher 채널 구독 (선생님 메시지 수신)
+
+let ably, teacherCh, studentCh;
 let role='', myName='', roomCode='', myId='';
 let leaderboard=[], players={};
 let score=0, combo=1, missionCount=0;
@@ -184,59 +189,63 @@ let timerInterval=null, poseInstance=null;
 
 function rankIcon(i){return['🥇','🥈','🥉'][i]??(i+1)+'위';}
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
-function setErr(msg, color='var(--red)'){const el=document.getElementById('err-msg');el.textContent=msg;el.style.color=color;}
+function setErr(msg,color='var(--red)'){const el=document.getElementById('err-msg');el.textContent=msg;el.style.color=color;}
 
 const params=new URLSearchParams(location.search);
 if(params.get('room')) document.getElementById('inp-code').value=params.get('room').toUpperCase();
 
-async function initAbly(code){
-  ably = new Ably.Realtime({ key: ABLY_KEY });
-  await new Promise((resolve, reject)=>{
-    const t = setTimeout(()=>reject(new Error('연결 시간 초과')), 10000);
-    ably.connection.once('connected', ()=>{ clearTimeout(t); resolve(); });
-    ably.connection.once('failed', (err)=>{ clearTimeout(t); reject(err); });
+async function initAbly(){
+  if(ably) return;
+  ably = new Ably.Realtime({key: ABLY_KEY});
+  await new Promise((resolve,reject)=>{
+    const t=setTimeout(()=>reject(new Error('연결 시간 초과')),10000);
+    ably.connection.once('connected',()=>{clearTimeout(t);resolve();});
+    ably.connection.once('failed',(err)=>{clearTimeout(t);reject(err);});
   });
-  channel = ably.channels.get('sport-room-' + code);
 }
 
 // ══ TEACHER ══
 async function goTeacher(){
-  role='teacher'; myId='teacher';
-  roomCode = Math.random().toString(36).substring(2,8).toUpperCase();
-  players = {};
-  setErr('연결 중...', 'var(--green)');
-  try { await initAbly(roomCode); } catch(e){ setErr('연결 실패: '+e.message); return; }
+  role='teacher';
+  myId='teacher';
+  roomCode=Math.random().toString(36).substring(2,8).toUpperCase();
+  players={};
+  setErr('연결 중...','var(--green)');
+  try{ await initAbly(); }catch(e){ setErr('연결 실패: '+e.message); return; }
   setErr('');
 
-  channel.subscribe('msg', msg=>{
-    const d = msg.data;
-    // 선생님이 보낸 메시지는 무시
-    if(d.sender === 'teacher') return;
+  // 선생님은 student-채널 구독 (학생들이 여기에 씀)
+  studentCh = ably.channels.get('student-'+roomCode);
+  // 선생님은 teacher-채널에 씀 (학생들이 여기를 구독)
+  teacherCh = ably.channels.get('teacher-'+roomCode);
+
+  studentCh.subscribe(msg=>{
+    const d=msg.data;
     if(d.type==='join'){
-      players[d.id] = {name:d.name, score:0, combo:1, count:0};
+      players[d.id]={name:d.name,score:0,combo:1,count:0};
       updateLB();
     }
     if(d.type==='score' && players[d.id]){
-      players[d.id].score = d.score;
-      players[d.id].combo = d.combo;
-      players[d.id].count = d.count;
+      players[d.id].score=d.score;
+      players[d.id].combo=d.combo;
+      players[d.id].count=d.count;
       updateLB();
     }
   });
 
   show('teacher');
-  document.getElementById('t-badge').textContent = roomCode;
-  document.getElementById('t-code').textContent = roomCode;
-  const joinURL = location.origin + location.pathname + '?room=' + roomCode;
-  document.getElementById('t-url').textContent = joinURL;
+  document.getElementById('t-badge').textContent=roomCode;
+  document.getElementById('t-code').textContent=roomCode;
+  const joinURL=location.origin+location.pathname+'?room='+roomCode;
+  document.getElementById('t-url').textContent=joinURL;
   new QRCode(document.getElementById('qr-img'),{text:joinURL,width:150,height:150,correctLevel:QRCode.CorrectLevel.M});
 }
 
 function updateLB(){
-  leaderboard = Object.entries(players).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
-  document.getElementById('t-count').textContent = leaderboard.length+'명';
-  const max = leaderboard[0]?.score||1;
-  document.getElementById('t-lb').innerHTML = leaderboard.map((p,i)=>`
+  leaderboard=Object.entries(players).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
+  document.getElementById('t-count').textContent=leaderboard.length+'명';
+  const max=leaderboard[0]?.score||1;
+  document.getElementById('t-lb').innerHTML=leaderboard.map((p,i)=>`
     <div class="lb-row">
       <div class="lb-rank">${rankIcon(i)}</div>
       <div class="lb-info">
@@ -249,7 +258,7 @@ function updateLB(){
 }
 
 function teacherStart(){
-  channel.publish('msg', {type:'game_start', sender:'teacher'});
+  teacherCh.publish('cmd',{type:'game_start'});
   document.getElementById('t-start-btn').style.display='none';
   document.getElementById('t-reset-btn').style.display='';
   document.getElementById('t-waiting').style.display='none';
@@ -263,44 +272,49 @@ function teacherStart(){
     document.getElementById('t-timer').style.color=color;
     document.getElementById('t-bar').style.width=pct+'%';
     document.getElementById('t-bar').style.background=color;
-    if(t<=0){ clearInterval(timerInterval);   channel.publish('msg',{type:'game_end', sender:'teacher', players}); showResult(); }
+    if(t<=0){
+      clearInterval(timerInterval);
+      teacherCh.publish('cmd',{type:'game_end',players});
+      showResult();
+    }
   },100);
 }
 
 // ══ STUDENT ══
 async function goStudent(){
-  const name = document.getElementById('inp-name').value.trim();
-  const code = document.getElementById('inp-code').value.trim().toUpperCase();
-  if(!name||!code){ setErr('이름과 방 코드를 입력해 주세요!'); return; }
+  const name=document.getElementById('inp-name').value.trim();
+  const code=document.getElementById('inp-code').value.trim().toUpperCase();
+  if(!name||!code){setErr('이름과 방 코드를 입력해 주세요!');return;}
   myName=name; roomCode=code; role='student';
-  myId = 's-'+Date.now()+Math.random().toString(36).slice(2,5);
-  setErr('연결 중...', 'var(--green)');
-  try { await initAbly(code); } catch(e){ setErr('연결 실패: '+e.message); return; }
+  myId='s-'+Date.now()+Math.random().toString(36).slice(2,5);
+  setErr('연결 중...','var(--green)');
+  try{ await initAbly(); }catch(e){ setErr('연결 실패: '+e.message); return; }
   setErr('');
 
-  show('student');
-  document.getElementById('s-wait-name').textContent = name+'님, 잠깐만 기다려요!';
-  document.getElementById('s-conn-status').textContent = '연결 완료! 선생님을 기다리는 중...';
+  // 학생은 teacher-채널 구독 (선생님이 여기에 씀)
+  teacherCh = ably.channels.get('teacher-'+code);
+  // 학생은 student-채널에 씀 (선생님이 여기를 구독)
+  studentCh = ably.channels.get('student-'+code);
 
-  // 입장 알림 먼저 보내고
-  await channel.publish('msg', {type:'join', id:myId, name});
-
-  // 그 다음 구독 (선생님→학생 메시지만 처리)
-  channel.subscribe('msg', msg=>{
-    const d = msg.data;
-    // 학생이 보낸 메시지만 처리 (선생님 메시지 무시)
-    if(d.sender === 'teacher') return;
-    if(d.id === myId) return;
+  teacherCh.subscribe('cmd', msg=>{
+    const d=msg.data;
     if(d.type==='game_start') startStudentGame();
     if(d.type==='game_end'){
-      leaderboard = Object.entries(d.players||{}).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
+      leaderboard=Object.entries(d.players||{}).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
       showResult();
     }
   });
+
+  // 입장 알림
+  studentCh.publish('evt',{type:'join',id:myId,name});
+
+  show('student');
+  document.getElementById('s-wait-name').textContent=name+'님, 잠깐만 기다려요!';
+  document.getElementById('s-conn-status').textContent='연결 완료! 선생님을 기다리는 중...';
 }
 
 function startStudentGame(){
-  score=0; combo=1; missionCount=0;
+  score=0;combo=1;missionCount=0;
   document.getElementById('s-wait').style.display='none';
   document.getElementById('s-game').style.display='block';
   pickMission();
@@ -331,12 +345,12 @@ function successMission(){
   if(detCooldown)return;
   detCooldown=true;
   const pts=10*combo;
-  score+=pts; missionCount++;
+  score+=pts;missionCount++;
   combo=Math.min(combo+1,5);
   document.getElementById('s-score').textContent=score;
   document.getElementById('s-combo').textContent='x'+combo;
   showFeedback('+'+pts+'점! '+(combo>1?combo+'콤보!':''),'var(--green)');
-  channel.publish('msg',{type:'score',id:myId,score,combo,count:missionCount});
+  studentCh.publish('evt',{type:'score',id:myId,score,combo,count:missionCount});
   setTimeout(pickMission,700);
 }
 
@@ -349,7 +363,7 @@ function skipMission(){
 
 function showFeedback(txt,color){
   const el=document.getElementById('s-feedback');
-  el.textContent=txt; el.style.color=color; el.style.opacity=1;
+  el.textContent=txt;el.style.color=color;el.style.opacity=1;
   setTimeout(()=>{el.style.opacity=0;},900);
 }
 
@@ -367,62 +381,4 @@ function showResult(){
       <div class="pod-name">${p.name}</div>
       <div class="pod-score">${p.score}점</div>
       <div class="pod-block" style="height:${hts[vi]}px;background:${cols[vi]};">${mdls[vi]}</div>
-    </div>`:`<div class="pod-item"></div>`).join('');
-  document.getElementById('r-lb').innerHTML=leaderboard.map((p,i)=>`
-    <div class="final-row ${p.id===myId?'me':''}">
-      <span>${rankIcon(i)} ${p.name}${p.id===myId?' (나)':''}</span>
-      <span style="font-weight:500;color:var(--green);">${p.score}점</span>
-    </div>`).join('');
-}
-
-async function setupCamera(){
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
-    document.getElementById('s-video').srcObject=stream;
-    document.getElementById('s-cam-status').textContent='AI 인식 로딩 중...';
-    loadPose();
-  }catch{document.getElementById('s-cam-status').textContent='카메라 없음 – 버튼으로 완료하세요';}
-}
-
-function loadPose(){
-  if(!window.Pose){document.getElementById('s-cam-status').textContent='버튼으로 완료하세요';return;}
-  const pose=new window.Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`});
-  pose.setOptions({modelComplexity:0,smoothLandmarks:true,minDetectionConfidence:.5,minTrackingConfidence:.5});
-  pose.onResults(onPoseResults);
-  pose.initialize().then(()=>{
-    poseInstance=pose;
-    document.getElementById('s-cam-status').textContent='준비 완료! 동작을 따라 하세요';
-    const video=document.getElementById('s-video');
-    const canvas=document.getElementById('s-canvas');
-    async function detect(){
-      if(!poseInstance)return;
-      canvas.width=video.videoWidth||320; canvas.height=video.videoHeight||240;
-      await poseInstance.send({image:video});
-      requestAnimationFrame(detect);
-    }
-    video.onloadeddata=()=>requestAnimationFrame(detect);
-  }).catch(()=>{document.getElementById('s-cam-status').textContent='버튼으로 완료하세요';});
-}
-
-function onPoseResults(results){
-  if(!results.poseLandmarks||detCooldown)return;
-  const lm=results.poseLandmarks;
-  const[nose,lWrist,rWrist,lShoulder,rShoulder,lHip,rHip]=[lm[0],lm[15],lm[16],lm[11],lm[12],lm[23],lm[24]];
-  const midHip=(lHip.y+rHip.y)/2;
-  let ok=false;
-  const k=currentMission.key;
-  if(k==='raise_both')ok=lWrist.y<lShoulder.y-.05&&rWrist.y<rShoulder.y-.05&&lWrist.y<nose.y&&rWrist.y<nose.y;
-  else if(k==='raise_right')ok=rWrist.y<rShoulder.y-.08&&rWrist.y<nose.y;
-  else if(k==='raise_left')ok=lWrist.y<lShoulder.y-.08&&lWrist.y<nose.y;
-  else if(k==='arms_wide')ok=Math.abs(lWrist.x-rWrist.x)>.55&&Math.abs(lWrist.y-rWrist.y)<.2;
-  else if(k==='bow')ok=nose.y>(lShoulder.y+rShoulder.y)/2+.12;
-  else if(k==='jump'){
-    if(lastHipY!==null&&midHip-lastHipY>.04&&!jumpCooldown){ok=true;jumpCooldown=true;setTimeout(()=>{jumpCooldown=false;},800);}
-    lastHipY=midHip;
-  }
-  if(ok)successMission();
-}
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
-</body>
-</html>
+    </div>`:`<d
