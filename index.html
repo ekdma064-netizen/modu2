@@ -210,6 +210,8 @@ async function goTeacher(){
 
   channel.subscribe('msg', msg=>{
     const d = msg.data;
+    // 선생님이 보낸 메시지는 무시
+    if(d.sender === 'teacher') return;
     if(d.type==='join'){
       players[d.id] = {name:d.name, score:0, combo:1, count:0};
       updateLB();
@@ -247,7 +249,7 @@ function updateLB(){
 }
 
 function teacherStart(){
-  channel.publish('msg', {type:'game_start'});
+  channel.publish('msg', {type:'game_start', sender:'teacher'});
   document.getElementById('t-start-btn').style.display='none';
   document.getElementById('t-reset-btn').style.display='';
   document.getElementById('t-waiting').style.display='none';
@@ -261,7 +263,7 @@ function teacherStart(){
     document.getElementById('t-timer').style.color=color;
     document.getElementById('t-bar').style.width=pct+'%';
     document.getElementById('t-bar').style.background=color;
-    if(t<=0){ clearInterval(timerInterval); channel.publish('msg',{type:'game_end',players}); showResult(); }
+    if(t<=0){ clearInterval(timerInterval);   channel.publish('msg',{type:'game_end', sender:'teacher', players}); showResult(); }
   },100);
 }
 
@@ -286,8 +288,9 @@ async function goStudent(){
   // 그 다음 구독 (선생님→학생 메시지만 처리)
   channel.subscribe('msg', msg=>{
     const d = msg.data;
-    // 내가 보낸 메시지는 무시
-    if(d.id === myId || d.type === 'join' || d.type === 'score') return;
+    // 학생이 보낸 메시지만 처리 (선생님 메시지 무시)
+    if(d.sender === 'teacher') return;
+    if(d.id === myId) return;
     if(d.type==='game_start') startStudentGame();
     if(d.type==='game_end'){
       leaderboard = Object.entries(d.players||{}).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
