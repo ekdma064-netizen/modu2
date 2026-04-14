@@ -133,10 +133,7 @@ input:focus{border-color:var(--g);}
       <canvas id="scan"></canvas>
       <div class="cs" id="scs">카메라 준비 중...</div>
     </div>
-    <div class="ar">
-      <button class="btn green" id="btn-ok" style="flex:2;font-size:18px">완료!</button>
-      <button class="btn out" id="btn-skip" style="flex:1;font-size:14px">건너뛰기</button>
-    </div>
+    <div id="pose-status" style="text-align:center;padding:10px;font-size:15px;color:var(--mu);margin-bottom:8px">동작을 따라 하세요!</div>
     <div class="fb" id="sfb"></div>
   </div>
 </div>
@@ -194,8 +191,6 @@ if(p.get('room'))$('icode').value=p.get('room').toUpperCase();
 $('btn-teacher').addEventListener('click', goTeacher);
 $('btn-student').addEventListener('click', goStudent);
 $('tsbtn').addEventListener('click', tStart);
-$('btn-ok').addEventListener('click', okBtn);
-$('btn-skip').addEventListener('click', skip);
 
 // ══ 선생님 ══
 async function goTeacher(){
@@ -406,72 +401,62 @@ function loadPose(){
 function onPose(res){
   if(!res.poseLandmarks||dc)return;
   const L=res.poseLandmarks;
-  const no=L[0];           // 코
-  const lw=L[15],rw=L[16]; // 손목
-  const le=L[13],re=L[14]; // 팔꿈치
-  const ls=L[11],rs=L[12]; // 어깨
-  const lh=L[23],rh=L[24]; // 엉덩이
-  const lk=L[25],rk=L[26]; // 무릎
+  const no=L[0];
+  const lw=L[15],rw=L[16];
+  const le=L[13],re=L[14];
+  const ls=L[11],rs=L[12];
+  const lh=L[23],rh=L[24];
 
-  const midSh=(ls.y+rs.y)/2;  // 어깨 중간 y
-  const midHip=(lh.y+rh.y)/2; // 엉덩이 중간 y
-  const shW=Math.abs(ls.x-rs.x); // 어깨 너비 (기준)
+  const midSh=(ls.y+rs.y)/2;
+  const midHip=(lh.y+rh.y)/2;
+  const shW=Math.abs(ls.x-rs.x);
 
   let hit=false;
   const k=cur.k;
 
   if(k==='raise_both'){
-    // 양손이 코보다 위에 있어야 함
     hit = lw.y < no.y && rw.y < no.y;
-
   } else if(k==='raise_right'){
-    // 오른손이 코 위, 왼손은 어깨 아래
     hit = rw.y < no.y && lw.y > ls.y;
-
   } else if(k==='raise_left'){
-    // 왼손이 코 위, 오른손은 어깨 아래
     hit = lw.y < no.y && rw.y > rs.y;
-
   } else if(k==='arms_wide'){
-    // 양손이 어깨 너비의 1.5배 이상 벌어지고 어깨 높이 근처
     const spread=Math.abs(lw.x-rw.x);
     const lwLevel=Math.abs(lw.y-ls.y);
     const rwLevel=Math.abs(rw.y-rs.y);
     hit = spread > shW*1.5 && lwLevel < shW*0.5 && rwLevel < shW*0.5;
-
   } else if(k==='attention'){
-    // 양손이 엉덩이 근처에 있고 몸 가까이
     const lClose=Math.abs(lw.x-lh.x)<shW*0.4 && Math.abs(lw.y-lh.y)<shW*0.5;
     const rClose=Math.abs(rw.x-rh.x)<shW*0.4 && Math.abs(rw.y-rh.y)<shW*0.5;
     hit = lClose && rClose;
-
   } else if(k==='bow'){
-    // 코가 어깨 y보다 아래에 있으면 숙인 것
     hit = no.y > midSh + shW*0.3;
-
   } else if(k==='hands_hip'){
-    // 양손이 엉덩이 높이 근처
     const lHip=Math.abs(lw.y-lh.y)<shW*0.4;
     const rHip=Math.abs(rw.y-rh.y)<shW*0.4;
     hit = lHip && rHip;
-
   } else if(k==='cross_arms'){
-    // 양손이 가슴 앞에서 교차 (손이 반대쪽 어깨 방향)
     const inFront = lw.y > ls.y && lw.y < midHip && rw.y > rs.y && rw.y < midHip;
-    const crossed = lw.x > rs.x && rw.x < ls.x; // 손이 서로 교차
+    const crossed = lw.x > rs.x && rw.x < ls.x;
     hit = inFront && crossed;
-
   } else if(k==='right_hip'){
-    // 오른손만 허리, 왼손은 다른 곳
     const rHip=Math.abs(rw.y-rh.y)<shW*0.4;
     const lNotHip=Math.abs(lw.y-lh.y)>shW*0.4;
     hit = rHip && lNotHip;
-
   } else if(k==='hands_head'){
-    // 양손이 머리(코) 위에서 가까이 모임
     const bothUp = lw.y < no.y && rw.y < no.y;
     const close = Math.abs(lw.x-rw.x) < shW*0.6;
     hit = bothUp && close;
+  }
+
+  // 실시간 피드백 표시
+  const ps = document.getElementById('pose-status');
+  if(hit){
+    ps.textContent = '✅ 동작 인식됨!';
+    ps.style.color = 'var(--g)';
+  } else {
+    ps.textContent = '동작을 따라 하세요!';
+    ps.style.color = 'var(--mu)';
   }
 
   if(hit) okBtn();
