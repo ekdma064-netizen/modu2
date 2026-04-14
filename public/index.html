@@ -5,13 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>스포츠 미션 게임</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
 <style>
 :root{--green:#1D9E75;--green-dark:#0F6E56;--amber:#EF9F27;--red:#E24B4A;--bg:#f8f8f6;--card:#fff;--border:rgba(0,0,0,0.1);--text:#1a1a18;--muted:#6b6b68;--radius:12px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 .screen{display:none;}.screen.active{display:block;}
-/* HOME */
 #home{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1rem;}
 .card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);padding:2rem;width:100%;max-width:400px;text-align:center;}
 .card h1{font-size:24px;font-weight:500;margin-bottom:8px;}
@@ -23,7 +22,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-green{background:var(--green);color:#fff;}.btn-green:hover{background:var(--green-dark);}
 .btn-outline{background:transparent;border:0.5px solid var(--border);color:var(--text);}.btn-outline:hover{background:#f0f0ee;}
 .divider{font-size:13px;color:var(--muted);margin:12px 0;}
-/* TEACHER */
 #teacher{padding:1rem;min-height:100vh;}
 .t-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:1rem;}
 .t-header h2{font-size:20px;font-weight:500;}
@@ -46,7 +44,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .lb-bar-wrap{height:5px;background:#eee;border-radius:3px;margin-top:3px;}
 .lb-bar{height:100%;border-radius:3px;background:var(--green);transition:width .5s;}
 .lb-score{font-size:17px;font-weight:500;color:var(--green);}
-/* STUDENT */
 #student{padding:.75rem;max-width:480px;margin:0 auto;min-height:100vh;}
 .hud{display:flex;justify-content:space-between;padding:8px 12px;background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;}
 .hud-item{text-align:center;}.hud-label{font-size:11px;color:var(--muted);}.hud-val{font-size:20px;font-weight:500;}
@@ -60,7 +57,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .feedback{text-align:center;font-size:26px;font-weight:500;min-height:38px;transition:opacity .3s;}
 .wait-box{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:12px;}
 .wait-box .big-e{font-size:64px;}.wait-box h2{font-size:22px;font-weight:500;}.wait-box p{font-size:14px;color:var(--muted);}
-/* RESULT */
 #result{display:none;position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;padding:2rem 1rem;}
 .result-inner{max-width:480px;margin:0 auto;text-align:center;}
 .podium{display:flex;justify-content:center;align-items:flex-end;gap:8px;margin:1rem 0 1.5rem;}
@@ -73,7 +69,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </head>
 <body>
 
-<!-- HOME -->
 <div id="home" class="screen active">
   <div class="card">
     <div style="font-size:56px;margin-bottom:12px;">🏃</div>
@@ -92,7 +87,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
-<!-- TEACHER -->
 <div id="teacher" class="screen">
   <div class="t-header">
     <h2>선생님 화면 <span id="t-badge" class="badge badge-green"></span></h2>
@@ -123,7 +117,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
-<!-- STUDENT -->
 <div id="student" class="screen">
   <div id="s-wait" class="wait-box">
     <div class="big-e">⏳</div>
@@ -156,7 +149,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
-<!-- RESULT -->
 <div id="result">
   <div class="result-inner">
     <div style="font-size:52px;margin-bottom:8px;">🏆</div>
@@ -171,7 +163,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <script>
-const MISSIONS=[
+const ABLY_KEY = 'blOMsg.LL4EgQ:toOJvOXaXViEmiF3BSvuKkuqGqjrFbzrMgbRJKK2VQ8';
+const MISSIONS = [
   {name:'만세!',emoji:'🙌',desc:'양손을 머리 위로 높이 올리세요',key:'raise_both'},
   {name:'점프!',emoji:'🦘',desc:'제자리에서 힘차게 점프하세요',key:'jump'},
   {name:'오른손 번쩍!',emoji:'👋',desc:'오른손을 어깨 위로 올리세요',key:'raise_right'},
@@ -179,65 +172,62 @@ const MISSIONS=[
   {name:'팔 벌려!',emoji:'🤸',desc:'양팔을 옆으로 쭉 펴세요',key:'arms_wide'},
   {name:'몸 숙여!',emoji:'🙇',desc:'상체를 앞으로 숙이세요',key:'bow'},
 ];
-const DURATION=60;
-let socket,role='',myName='',roomCode='';
-let leaderboard=[];
-let score=0,combo=1,missionCount=0;
+const DURATION = 60;
+
+let ably, channel;
+let role='', myName='', roomCode='', myId='';
+let leaderboard=[], players={};
+let score=0, combo=1, missionCount=0;
 let currentMission=MISSIONS[0];
-let detCooldown=false,jumpCooldown=false,lastHipY=null;
-let timerInterval=null,poseInstance=null;
+let detCooldown=false, jumpCooldown=false, lastHipY=null;
+let timerInterval=null, poseInstance=null;
 
 function rankIcon(i){return['🥇','🥈','🥉'][i]??(i+1)+'위';}
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
-// URL 자동 입력
 const params=new URLSearchParams(location.search);
 if(params.get('room')) document.getElementById('inp-code').value=params.get('room').toUpperCase();
 
-// ── 소켓 초기화 ──
-function initSocket(){
-  socket=io();
-  socket.on('error_msg',msg=>{ document.getElementById('err-msg').textContent=msg; });
-  socket.on('players_update',players=>{ onPlayersUpdate(players); });
-  socket.on('game_start',()=>{ startStudentGame(); });
-  socket.on('game_end',players=>{ onPlayersUpdate(players); showResult(); });
-  socket.on('joined_ok',()=>{ document.getElementById('s-conn-status').textContent='연결 완료! 선생님을 기다리는 중...'; });
+async function initAbly(code){
+  ably = new Ably.Realtime(ABLY_KEY);
+  await new Promise(r=>ably.connection.once('connected',r));
+  channel = ably.channels.get('room-'+code);
 }
 
 // ══ TEACHER ══
-function goTeacher(){
+async function goTeacher(){
   role='teacher';
+  myId='teacher';
   roomCode=Math.random().toString(36).substring(2,8).toUpperCase();
-  initSocket();
-  socket.emit('create_room',{roomCode});
+  players={};
+  await initAbly(roomCode);
+
+  channel.subscribe(msg=>{
+    const d=msg.data;
+    if(d.type==='join'){
+      players[d.id]={name:d.name,score:0,combo:1,count:0};
+      updateLB();
+      channel.publish({data:{type:'joined_ok',targetId:d.id}});
+    }
+    if(d.type==='score'){
+      if(players[d.id]){
+        players[d.id].score=d.score;
+        players[d.id].combo=d.combo;
+        players[d.id].count=d.count;
+        updateLB();
+      }
+    }
+  });
+
   show('teacher');
   document.getElementById('t-badge').textContent=roomCode;
   document.getElementById('t-code').textContent=roomCode;
-  const joinURL=location.origin+'?room='+roomCode;
+  const joinURL=location.origin+location.pathname+'?room='+roomCode;
   document.getElementById('t-url').textContent=joinURL;
   new QRCode(document.getElementById('qr-img'),{text:joinURL,width:150,height:150,correctLevel:QRCode.CorrectLevel.M});
 }
 
-function teacherStart(){
-  socket.emit('start_game');
-  document.getElementById('t-start-btn').style.display='none';
-  document.getElementById('t-reset-btn').style.display='';
-  document.getElementById('t-waiting').style.display='none';
-  document.getElementById('t-playing').style.display='';
-  document.getElementById('t-lb-title').textContent='실시간 순위';
-  let t=DURATION;
-  timerInterval=setInterval(()=>{
-    t-=0.1;const pct=Math.max(0,t/DURATION*100);
-    const color=pct>50?'var(--green)':pct>25?'var(--amber)':'var(--red)';
-    document.getElementById('t-timer').textContent=Math.ceil(Math.max(0,t));
-    document.getElementById('t-timer').style.color=color;
-    document.getElementById('t-bar').style.width=pct+'%';
-    document.getElementById('t-bar').style.background=color;
-    if(t<=0){ clearInterval(timerInterval); socket.emit('end_game'); }
-  },100);
-}
-
-function onPlayersUpdate(players){
+function updateLB(){
   leaderboard=Object.entries(players).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
   document.getElementById('t-count').textContent=leaderboard.length+'명';
   const max=leaderboard[0]?.score||1;
@@ -253,16 +243,45 @@ function onPlayersUpdate(players){
     </div>`).join('');
 }
 
+function teacherStart(){
+  channel.publish({data:{type:'game_start'}});
+  document.getElementById('t-start-btn').style.display='none';
+  document.getElementById('t-reset-btn').style.display='';
+  document.getElementById('t-waiting').style.display='none';
+  document.getElementById('t-playing').style.display='';
+  document.getElementById('t-lb-title').textContent='실시간 순위';
+  let t=DURATION;
+  timerInterval=setInterval(()=>{
+    t-=0.1; const pct=Math.max(0,t/DURATION*100);
+    const color=pct>50?'var(--green)':pct>25?'var(--amber)':'var(--red)';
+    document.getElementById('t-timer').textContent=Math.ceil(Math.max(0,t));
+    document.getElementById('t-timer').style.color=color;
+    document.getElementById('t-bar').style.width=pct+'%';
+    document.getElementById('t-bar').style.background=color;
+    if(t<=0){ clearInterval(timerInterval); channel.publish({data:{type:'game_end',players}}); showResult(); }
+  },100);
+}
+
 // ══ STUDENT ══
-function goStudent(){
+async function goStudent(){
   const name=document.getElementById('inp-name').value.trim();
   const code=document.getElementById('inp-code').value.trim().toUpperCase();
   if(!name||!code){document.getElementById('err-msg').textContent='이름과 방 코드를 입력해 주세요!';return;}
-  myName=name;roomCode=code;role='student';
-  initSocket();
-  socket.emit('join_room',{roomCode:code,name});
+  myName=name; roomCode=code; role='student';
+  myId='s-'+Date.now()+Math.random().toString(36).slice(2,5);
+
+  await initAbly(code);
   show('student');
   document.getElementById('s-wait-name').textContent=name+'님, 잠깐만 기다려요!';
+  document.getElementById('s-conn-status').textContent='연결 완료! 선생님을 기다리는 중...';
+
+  channel.publish({data:{type:'join',id:myId,name}});
+
+  channel.subscribe(msg=>{
+    const d=msg.data;
+    if(d.type==='game_start') startStudentGame();
+    if(d.type==='game_end'){ leaderboard=Object.entries(d.players||{}).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score); showResult(); }
+  });
 }
 
 function startStudentGame(){
@@ -273,7 +292,7 @@ function startStudentGame(){
   setupCamera();
   let t=DURATION;
   timerInterval=setInterval(()=>{
-    t-=0.1;const pct=Math.max(0,t/DURATION*100);
+    t-=0.1; const pct=Math.max(0,t/DURATION*100);
     const color=pct>50?'var(--green)':pct>25?'var(--amber)':'var(--red)';
     document.getElementById('s-time').textContent=Math.ceil(Math.max(0,t));
     document.getElementById('s-time').style.color=color;
@@ -302,7 +321,7 @@ function successMission(){
   document.getElementById('s-score').textContent=score;
   document.getElementById('s-combo').textContent='x'+combo;
   showFeedback('+'+pts+'점! '+(combo>1?combo+'콤보!':''),'var(--green)');
-  socket.emit('score_update',{score,combo,count:missionCount});
+  channel.publish({data:{type:'score',id:myId,score,combo,count:missionCount}});
   setTimeout(pickMission,700);
 }
 
@@ -331,13 +350,13 @@ function showResult(){
   const hts=[100,130,80],cols=['#B4B2A9','#EF9F27','#9FE1CB'],mdls=['🥈','🥇','🥉'];
   document.getElementById('r-podium').innerHTML=ord.map((p,vi)=>p?`
     <div class="pod-item">
-      <div class="pod-name">${p?.name}</div>
-      <div class="pod-score">${p?.score}점</div>
+      <div class="pod-name">${p.name}</div>
+      <div class="pod-score">${p.score}점</div>
       <div class="pod-block" style="height:${hts[vi]}px;background:${cols[vi]};">${mdls[vi]}</div>
     </div>`:`<div class="pod-item"></div>`).join('');
   document.getElementById('r-lb').innerHTML=leaderboard.map((p,i)=>`
-    <div class="final-row">
-      <span>${rankIcon(i)} ${p.name}</span>
+    <div class="final-row ${p.id===myId?'me':''}">
+      <span>${rankIcon(i)} ${p.name}${p.id===myId?' (나)':''}</span>
       <span style="font-weight:500;color:var(--green);">${p.score}점</span>
     </div>`).join('');
 }
