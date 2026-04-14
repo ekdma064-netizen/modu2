@@ -423,61 +423,96 @@ function loadPose(){
 // ── 포즈 판별 ──
 function onPose(res){
   if(!res.poseLandmarks){
-    $('pose-status').textContent='사람을 인식하지 못했어요. 카메라에서 멀리 서세요.';
+    $('pose-status').textContent='사람을 인식 못 했어요. 카메라에서 조금 멀리 서세요.';
+    $('pose-status').style.color='var(--r)';
     return;
   }
   if(judging) return;
 
   const L=res.poseLandmarks;
-  const no=L[0];
-  const lw=L[15],rw=L[16];
-  const ls=L[11],rs=L[12];
-  const lh=L[23],rh=L[24];
-  const midSh=(ls.y+rs.y)/2;
-  const midHip=(lh.y+rh.y)/2;
-  const shW=Math.abs(ls.x-rs.x)||0.1;
+  // MediaPipe: y는 위=0, 아래=1 / 카메라 좌우반전이므로 left/right 그대로 사용
+  const nose=L[0];
+  const lShoulder=L[11], rShoulder=L[12];
+  const lElbow=L[13],    rElbow=L[14];
+  const lWrist=L[15],    rWrist=L[16];
+  const lHip=L[23],      rHip=L[24];
 
-  let hit=false;
-  const k=cur.k;
+  // 어깨 너비 기준값 (신체 스케일 기준)
+  const shW = Math.abs(lShoulder.x - rShoulder.x) || 0.15;
+  const shMidY = (lShoulder.y + rShoulder.y) / 2;
+  const hipMidY = (lHip.y + rHip.y) / 2;
+  const bodyH = hipMidY - shMidY; // 어깨~엉덩이 높이
 
-  if(k==='raise_both')
-    hit = lw.y<no.y && rw.y<no.y;
-  else if(k==='raise_right')
-    hit = rw.y<no.y && lw.y>ls.y;
-  else if(k==='raise_left')
-    hit = lw.y<no.y && rw.y>rs.y;
-  else if(k==='arms_wide')
-    hit = Math.abs(lw.x-rw.x)>shW*1.5
-       && Math.abs(lw.y-ls.y)<shW*0.5
-       && Math.abs(rw.y-rs.y)<shW*0.5;
-  else if(k==='attention')
-    hit = Math.abs(lw.x-lh.x)<shW*0.4 && Math.abs(lw.y-lh.y)<shW*0.5
-       && Math.abs(rw.x-rh.x)<shW*0.4 && Math.abs(rw.y-rh.y)<shW*0.5;
-  else if(k==='bow')
-    hit = no.y > midSh+shW*0.3;
-  else if(k==='hands_hip')
-    hit = Math.abs(lw.y-lh.y)<shW*0.4 && Math.abs(rw.y-rh.y)<shW*0.4;
-  else if(k==='cross_arms')
-    hit = lw.y>ls.y && lw.y<midHip && rw.y>rs.y && rw.y<midHip
-       && lw.x>rs.x && rw.x<ls.x;
-  else if(k==='right_hip')
-    hit = Math.abs(rw.y-rh.y)<shW*0.4 && Math.abs(lw.y-lh.y)>shW*0.4;
-  else if(k==='hands_head')
-    hit = lw.y<no.y && rw.y<no.y && Math.abs(lw.x-rw.x)<shW*0.6;
+  let hit = false;
+  const k = cur.k;
 
-  const ps=$('pose-status');
+  if(k === 'raise_both'){
+    // 양손이 코보다 위 (y값이 더 작음)
+    hit = lWrist.y < nose.y && rWrist.y < nose.y;
+
+  } else if(k === 'raise_right'){
+    // 오른손이 코보다 위, 왼손은 어깨보다 아래
+    hit = rWrist.y < nose.y && lWrist.y > lShoulder.y;
+
+  } else if(k === 'raise_left'){
+    // 왼손이 코보다 위, 오른손은 어깨보다 아래
+    hit = lWrist.y < nose.y && rWrist.y > rShoulder.y;
+
+  } else if(k === 'arms_wide'){
+    // 양손이 어깨보다 넓게 벌어지고, 손 높이가 어깨와 비슷
+    const spread = Math.abs(lWrist.x - rWrist.x);
+    const lLevel = Math.abs(lWrist.y - lShoulder.y);
+    const rLevel = Math.abs(rWrist.y - rShoulder.y);
+    hit = spread > shW * 1.8 && lLevel < shW * 0.6 && rLevel < shW * 0.6;
+
+  } else if(k === 'attention'){
+    // 양손이 허벅지 옆 (엉덩이 근처, 몸 가까이)
+    const lOk = Math.abs(lWrist.y - lHip.y) < bodyH * 0.4 && Math.abs(lWrist.x - lHip.x) < shW * 0.5;
+    const rOk = Math.abs(rWrist.y - rHip.y) < bodyH * 0.4 && Math.abs(rWrist.x - rHip.x) < shW * 0.5;
+    hit = lOk && rOk;
+
+  } else if(k === 'bow'){
+    // 코가 어깨 높이보다 아래로 내려옴
+    hit = nose.y > shMidY + bodyH * 0.3;
+
+  } else if(k === 'hands_hip'){
+    // 양손이 엉덩이 높이에 있음
+    const lOk = Math.abs(lWrist.y - lHip.y) < bodyH * 0.3;
+    const rOk = Math.abs(rWrist.y - rHip.y) < bodyH * 0.3;
+    hit = lOk && rOk;
+
+  } else if(k === 'cross_arms'){
+    // 양손이 가슴 앞에서 교차 (x좌표가 반대편 어깨를 넘어감)
+    const lInChest = lWrist.y > lShoulder.y && lWrist.y < hipMidY;
+    const rInChest = rWrist.y > rShoulder.y && rWrist.y < hipMidY;
+    const crossed  = lWrist.x > rShoulder.x && rWrist.x < lShoulder.x;
+    hit = lInChest && rInChest && crossed;
+
+  } else if(k === 'right_hip'){
+    // 오른손만 엉덩이 높이, 왼손은 다른 위치
+    const rOk = Math.abs(rWrist.y - rHip.y) < bodyH * 0.3;
+    const lNotHip = Math.abs(lWrist.y - lHip.y) > bodyH * 0.35;
+    hit = rOk && lNotHip;
+
+  } else if(k === 'hands_head'){
+    // 양손이 코 위에서 서로 가까이 모임
+    const bothUp = lWrist.y < nose.y && rWrist.y < nose.y;
+    const close  = Math.abs(lWrist.x - rWrist.x) < shW * 0.7;
+    hit = bothUp && close;
+  }
+
+  const ps = $('pose-status');
   if(hit){
-    if(!holdStart) holdStart=Date.now();
-    const held=Date.now()-holdStart;
-    const pct=Math.min(100,Math.round(held/HOLD_MS*100));
-    ps.textContent=`✅ 동작 유지 중... ${pct}%`;
-    ps.style.color='var(--g)';
-    if(held>=HOLD_MS) showJudge(true);
+    if(!holdStart) holdStart = Date.now();
+    const held = Date.now() - holdStart;
+    const pct  = Math.min(100, Math.round(held / HOLD_MS * 100));
+    ps.textContent = `✅ 동작 유지 중... ${pct}%`;
+    ps.style.color  = 'var(--g)';
+    if(held >= HOLD_MS) showJudge(true);
   } else {
-    holdStart=null;
-    // 디버그: 현재 관절 값 표시
-    ps.textContent=`인식중 (${k}) | 코y:${no.y.toFixed(2)} 왼손y:${lw.y.toFixed(2)} 오른손y:${rw.y.toFixed(2)}`;
-    ps.style.color='var(--mu)';
+    holdStart = null;
+    ps.textContent = '동작을 따라 하세요!';
+    ps.style.color  = 'var(--mu)';
   }
 }
 </script>
