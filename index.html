@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>스포츠 미션 게임</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
 <style>
 :root{--g:#1D9E75;--gd:#0F6E56;--a:#EF9F27;--r:#E24B4A;--bg:#f8f8f6;--card:#fff;--bd:rgba(0,0,0,0.1);--tx:#1a1a18;--mu:#6b6b68;--ra:12px;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -71,11 +70,11 @@ input:focus{border-color:var(--g);}
     <div style="font-size:56px;margin-bottom:12px">🏃</div>
     <h1>스포츠 미션 게임</h1>
     <p>선생님이 방을 만들고<br>학생들은 QR코드로 바로 참가!</p>
-    <button class="btn green" onclick="goTeacher()">선생님 – 방 만들기</button>
+    <button class="btn green" id="btn-teacher">선생님 – 방 만들기</button>
     <div class="div">── 학생 참가 ──</div>
     <input id="iname" placeholder="내 이름 입력">
     <input id="icode" placeholder="방 코드 입력" maxlength="6" oninput="this.value=this.value.toUpperCase()" style="font-size:20px;letter-spacing:6px;font-weight:500">
-    <button class="btn out" onclick="goStudent()">학생 – 게임 참가</button>
+    <button class="btn out" id="btn-student">학생 – 게임 참가</button>
     <p id="emsg" style="font-size:13px;margin-top:6px;min-height:20px;"></p>
   </div>
 </div>
@@ -85,7 +84,7 @@ input:focus{border-color:var(--g);}
     <h2>선생님 화면 <span id="tbadge" class="bx bg"></span></h2>
     <div style="display:flex;gap:8px;align-items:center">
       <span id="tcnt" class="bx ba">0명</span>
-      <button class="btn green" id="tsbtn" onclick="tStart()" style="width:auto;padding:8px 16px;margin:0">게임 시작</button>
+      <button class="btn green" id="tsbtn" style="width:auto;padding:8px 16px;margin:0">게임 시작</button>
       <button class="btn out" onclick="location.reload()" id="trbtn" style="width:auto;padding:8px 12px;margin:0;display:none">초기화</button>
     </div>
   </div>
@@ -135,8 +134,8 @@ input:focus{border-color:var(--g);}
       <div class="cs" id="scs">카메라 준비 중...</div>
     </div>
     <div class="ar">
-      <button class="btn green" onclick="okBtn()" style="flex:2;font-size:18px">완료!</button>
-      <button class="btn out" onclick="skip()" style="flex:1;font-size:14px">건너뛰기</button>
+      <button class="btn green" id="btn-ok" style="flex:2;font-size:18px">완료!</button>
+      <button class="btn out" id="btn-skip" style="flex:1;font-size:14px">건너뛰기</button>
     </div>
     <div class="fb" id="sfb"></div>
   </div>
@@ -155,9 +154,12 @@ input:focus{border-color:var(--g);}
   </div>
 </div>
 
-<script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 const SUPA_URL = 'https://xfqxorbmfxclrhxtweib.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXhvcmJtZnhjbHJoeHR3ZWliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDUwNDMsImV4cCI6MjA5MTY4MTA0M30.GIC1E2Lqa_0lX9YOZ_Etkuv1YMIddrQ36Lm9kRHSJwo';
+const sb = createClient(SUPA_URL, SUPA_KEY);
 
 const MISS = [
   {n:'만세!',      e:'🙌',d:'양손을 머리 위로 높이 올리세요',k:'raise_both'},
@@ -169,14 +171,9 @@ const MISS = [
 ];
 const DUR = 60;
 
-const { createClient } = window.supabase;
-const sb = createClient(SUPA_URL, SUPA_KEY);
-
-let ch; // Supabase 채널
-let role='', myId='', myName='', room='';
+let ch, role='', myId='', myName='', room='';
 let players={}, lb=[];
-let score=0, combo=1, cnt=0;
-let cur=MISS[0];
+let score=0, combo=1, cnt=0, cur=MISS[0];
 let dc=false, jc=false, lastY=null;
 let timer=null, pose=null;
 
@@ -189,23 +186,23 @@ function msg(t,c='var(--r)'){$('emsg').textContent=t;$('emsg').style.color=c;}
 const p=new URLSearchParams(location.search);
 if(p.get('room'))$('icode').value=p.get('room').toUpperCase();
 
-// ══════════════════════════════
-//  선생님
-// ══════════════════════════════
+// 버튼 이벤트
+$('btn-teacher').addEventListener('click', goTeacher);
+$('btn-student').addEventListener('click', goStudent);
+$('tsbtn').addEventListener('click', tStart);
+$('btn-ok').addEventListener('click', okBtn);
+$('btn-skip').addEventListener('click', skip);
+
+// ══ 선생님 ══
 async function goTeacher(){
-  role='teacher';
-  myId='teacher';
+  role='teacher'; myId='teacher';
   room=Math.random().toString(36).slice(2,8).toUpperCase();
   players={};
   msg('연결 중...','var(--g)');
 
-  // Supabase Broadcast 채널 구독
-  ch = supabase.channel('room-'+room, {
-    config: { broadcast: { self: false } }  // 자신이 보낸 건 받지 않음
-  });
+  ch = sb.channel('room-'+room, {config:{broadcast:{self:false}}});
 
-  ch.on('broadcast', {event:'student'}, ({payload})=>{
-    // 학생→선생님 메시지
+  ch.on('broadcast',{event:'student'},({payload})=>{
     if(payload.t==='join'){
       players[payload.id]={name:payload.name,score:0,combo:1,cnt:0};
       renderLB();
@@ -218,14 +215,7 @@ async function goTeacher(){
     }
   });
 
-  const status = await new Promise(res=>{
-    ch.subscribe(s=>res(s));
-  });
-
-  if(status !== 'SUBSCRIBED'){
-    msg('연결 실패. 새로고침 후 다시 시도해 주세요.');
-    return;
-  }
+  await new Promise(res=>ch.subscribe(s=>{ if(s==='SUBSCRIBED') res(); }));
   msg('');
 
   show('teacher');
@@ -253,8 +243,7 @@ function renderLB(){
 }
 
 function tStart(){
-  // 선생님→학생 시작 신호
-  ch.send({type:'broadcast', event:'teacher', payload:{t:'start'}});
+  ch.send({type:'broadcast',event:'teacher',payload:{t:'start'}});
   $('tsbtn').style.display='none';
   $('trbtn').style.display='';
   $('twait').style.display='none';
@@ -271,15 +260,13 @@ function tStart(){
     $('tbar').style.background=c;
     if(s<=0){
       clearInterval(timer);
-      ch.send({type:'broadcast', event:'teacher', payload:{t:'end', players}});
+      ch.send({type:'broadcast',event:'teacher',payload:{t:'end',players}});
       showResult();
     }
   },100);
 }
 
-// ══════════════════════════════
-//  학생
-// ══════════════════════════════
+// ══ 학생 ══
 async function goStudent(){
   const name=$('iname').value.trim();
   const code=$('icode').value.trim().toUpperCase();
@@ -288,12 +275,9 @@ async function goStudent(){
   myId='s'+Date.now()+Math.random().toString(36).slice(2,5);
   msg('연결 중...','var(--g)');
 
-  ch = sb.channel('room-'+code, {
-    config: { broadcast: { self: false } }
-  });
+  ch = sb.channel('room-'+code, {config:{broadcast:{self:false}}});
 
-  ch.on('broadcast', {event:'teacher'}, ({payload})=>{
-    // 선생님→학생 메시지
+  ch.on('broadcast',{event:'teacher'},({payload})=>{
     if(payload.t==='start') startGame();
     if(payload.t==='end'){
       lb=Object.entries(payload.players||{}).map(([id,v])=>({id,...v})).sort((a,b)=>b.score-a.score);
@@ -301,18 +285,9 @@ async function goStudent(){
     }
   });
 
-  const status = await new Promise(res=>{
-    ch.subscribe(s=>res(s));
-  });
-
-  if(status !== 'SUBSCRIBED'){
-    msg('연결 실패. 방 코드를 확인해 주세요.');
-    return;
-  }
+  await new Promise(res=>ch.subscribe(s=>{ if(s==='SUBSCRIBED') res(); }));
+  ch.send({type:'broadcast',event:'student',payload:{t:'join',id:myId,name}});
   msg('');
-
-  // 입장 알림
-  ch.send({type:'broadcast', event:'student', payload:{t:'join', id:myId, name}});
 
   show('student');
   $('swname').textContent=name+'님, 잠깐만 기다려요!';
@@ -351,12 +326,12 @@ function pickM(){
 function okBtn(){
   if(dc)return; dc=true;
   const pts=10*combo;
-  score+=pts; cnt++;
+  score+=pts;cnt++;
   combo=Math.min(combo+1,5);
   $('ssc').textContent=score;
   $('scb').textContent='x'+combo;
   fb('+'+pts+'점! '+(combo>1?combo+'콤보!':''),'var(--g)');
-  ch.send({type:'broadcast', event:'student', payload:{t:'score',id:myId,score,combo,cnt}});
+  ch.send({type:'broadcast',event:'student',payload:{t:'score',id:myId,score,combo,cnt}});
   setTimeout(pickM,700);
 }
 
@@ -395,6 +370,7 @@ function showResult(){
     </div>`).join('');
 }
 
+// ══ 카메라 ══
 async function setupCam(){
   try{
     const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
@@ -406,7 +382,7 @@ async function setupCam(){
 
 function loadPose(){
   if(!window.Pose){$('scs').textContent='버튼으로 완료하세요';return;}
-  pose=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`});
+  pose=new window.Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`});
   pose.setOptions({modelComplexity:0,smoothLandmarks:true,minDetectionConfidence:.5,minTrackingConfidence:.5});
   pose.onResults(onPose);
   pose.initialize().then(()=>{
