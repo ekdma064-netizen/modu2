@@ -46,7 +46,7 @@ input:focus{border-color:var(--g);}
 .hi{text-align:center;}.hl{font-size:11px;color:var(--mu);}.hv{font-size:20px;font-weight:500;}
 .mb{text-align:center;padding:1.2rem;background:var(--card);border:0.5px solid var(--bd);border-radius:var(--ra);margin-bottom:10px;}
 .me{font-size:58px;line-height:1;margin-bottom:10px;}.mn{font-size:22px;font-weight:500;margin-bottom:4px;}.md{font-size:13px;color:var(--mu);}
-.cw{position:relative;width:100%;max-width:340px;margin:0 auto 10px;border-radius:var(--ra);overflow:hidden;border:0.5px solid var(--bd);background:#000;aspect-ratio:4/3;}
+.cw{position:relative;width:100%;max-width:100%;margin:0 auto 10px;border-radius:var(--ra);overflow:hidden;border:0.5px solid var(--bd);background:#000;aspect-ratio:3/4;}
 .cw video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 .cw canvas{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
 .cs{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:3px 10px;border-radius:99px;white-space:nowrap;}
@@ -124,7 +124,7 @@ input:focus{border-color:var(--g);}
     <div class="bw" style="margin-bottom:10px"><div class="bb" id="sbar" style="width:100%;background:var(--g)"></div></div>
 
     <div class="mb">
-      <div class="me" id="sem">🙌</div>
+      <div id="ssvg" style="width:100px;height:130px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;"></div>
       <div class="mn" id="smn">만세!</div>
       <div class="md" id="smd">양손을 머리 위로 올리세요</div>
     </div>
@@ -176,15 +176,178 @@ const SUPA_URL = 'https://xfqxorbmfxclrhxtweib.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXhvcmJtZnhjbHJoeHR3ZWliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDUwNDMsImV4cCI6MjA5MTY4MTA0M30.GIC1E2Lqa_0lX9YOZ_Etkuv1YMIddrQ36Lm9kRHSJwo';
 const sb = createClient(SUPA_URL, SUPA_KEY);
 
-const MISS = [
+const POSES = {
+  raise_both:   `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="10" y2="10" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="70" y2="10" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="25" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="55" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  raise_right:  `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="70" y2="10" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="20" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="25" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="55" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  raise_left:   `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="10" y2="10" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="60" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="25" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="55" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  arms_wide:    `<svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="50" y1="22" x2="50" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="50" y1="38" x2="5"  y2="38" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="50" y1="38" x2="95" y2="38" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="50" y1="70" x2="35" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="50" y1="70" x2="65" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  attention:    `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="28" y2="70" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="52" y2="70" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="30" y2="115" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="50" y2="115" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  bow:          `<svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="20" cy="30" r="10" fill="#1D9E75"/>
+    <line x1="28" y1="36" x2="70" y2="55" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="43" x2="30" y2="15" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="55" y1="50" x2="72" y2="28" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="70" y1="55" x2="60" y2="100" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="70" y1="55" x2="82" y2="100" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  hands_hip:    `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="15" y2="60" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="65" y2="60" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  cross_arms:   `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="58" y2="52" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="22" y2="52" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  right_hip:    `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="65" y2="60" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="25" y2="30" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  v_arms:       `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="15" y2="8"  stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="65" y2="8"  stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  cheek_frame:  `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="15" y2="20" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="65" y2="20" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  right_knee:   `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="20" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="60" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="55" y2="55"  stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="55" y1="55" x2="60" y2="80"  stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  left_hip:     `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="15" y2="60" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="55" y2="30" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  left_knee:    `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="20" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="60" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="25" y2="55"  stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="25" y1="55" x2="20" y2="80"  stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  hands_head_wide:`<svg viewBox="0 0 90 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="45" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="45" y1="22" x2="45" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="45" y1="38" x2="10" y2="18" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="45" y1="38" x2="80" y2="18" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="45" y1="70" x2="32" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="45" y1="70" x2="58" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  right_forward: `<svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="90" y2="38" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="38" x2="20" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  sky_point:    `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="65" y2="5"  stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="20" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  lean_side:    `<svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="55" cy="15" r="10" fill="#1D9E75"/>
+    <line x1="47" y1="22" x2="30" y2="65" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="42" y1="38" x2="15" y2="30" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="38" y1="48" x2="62" y2="35" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="30" y1="65" x2="18" y2="108" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="30" y1="65" x2="44" y2="108" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  clap_above:   `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="28" y2="5"  stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="35" x2="52" y2="5"  stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+  left_forward: `<svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="60" cy="12" r="10" fill="#1D9E75"/>
+    <line x1="60" y1="22" x2="60" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="60" y1="38" x2="10" y2="38" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="60" y1="38" x2="80" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+    <line x1="60" y1="70" x2="47" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <line x1="60" y1="70" x2="73" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+  </svg>`,
+};
   {n:'만세!',        e:'🙌', d:'양손을 머리 위로 높이 올리세요',        k:'raise_both'},
   {n:'오른손 번쩍!',  e:'👋', d:'오른손만 머리 위로 올리세요',           k:'raise_right'},
   {n:'왼손 번쩍!',   e:'🤚', d:'왼손만 머리 위로 올리세요',             k:'raise_left'},
   {n:'팔 벌려!',     e:'🤸', d:'양팔을 어깨 높이로 옆으로 쭉 펴세요',   k:'arms_wide'},
   {n:'차렷!',        e:'🧍', d:'팔을 몸 옆에 붙이고 똑바로 서세요',     k:'attention'},
-  {n:'몸 숙여!',     e:'🙇', d:'상체를 앞으로 45도 이상 숙이세요',      k:'bow'},
+  {n:'인사!',        e:'🙇', d:'상체를 앞으로 45도 이상 숙이세요',      k:'bow'},
   {n:'양손 허리!',   e:'🫰', d:'양손을 허리에 올리세요',                k:'hands_hip'},
-  {n:'팔짱 껴!',     e:'🤐', d:'양팔을 가슴 앞에서 교차하세요',         k:'cross_arms'},
+  {n:'나비포옹!',     e:'🤗', d:'양팔을 가슴 앞에서 교차하세요',         k:'cross_arms'},
   {n:'오른손 허리!',  e:'💃', d:'오른손만 허리에 올리세요',               k:'right_hip'},
   {n:'V자 팔!',      e:'✌️', d:'양팔을 머리 위로 V자 모양으로 올리세요', k:'v_arms'},
   {n:'볼 감싸!',     e:'🌸', d:'양손을 귀 옆 얼굴 높이로 올리세요',     k:'cheek_frame'},
@@ -192,11 +355,11 @@ const MISS = [
   {n:'왼손 허리!',   e:'🕺', d:'왼손만 허리에 올리세요',                k:'left_hip'},
   {n:'왼발 올려!',   e:'🦿', d:'왼쪽 무릎을 허리 높이로 올리세요',      k:'left_knee'},
   {n:'양손 머리!',   e:'👐', d:'양손을 머리 양옆에 넓게 올리세요',       k:'hands_head_wide'},
-  {n:'오른손 앞으로!', e:'👉', d:'오른팔을 앞으로 쭉 뻗으세요',           k:'right_forward'},
+  {n:'오른손 나란히!', e:'👉', d:'오른팔을 어깨 높이로 옆으로 쭉 뻗으세요', k:'right_forward'},
   {n:'하늘 찌르기!', e:'☝️', d:'오른손을 머리 위로 높이 올리세요',       k:'sky_point'},
   {n:'옆으로 기울기!', e:'🤸', d:'상체를 옆으로 기울이세요',              k:'lean_side'},
   {n:'양손 위 박수!', e:'👏', d:'머리 위에서 양손을 가까이 모으세요',    k:'clap_above'},
-  {n:'왼손 앞으로!', e:'👈', d:'왼팔을 앞으로 쭉 뻗으세요',             k:'left_forward'},
+  {n:'왼손 나란히!',  e:'👈', d:'왼팔을 어깨 높이로 옆으로 쭉 뻗으세요',  k:'left_forward'},
 ];
 const DUR = 300;
 
@@ -386,7 +549,7 @@ function pickM(){
   let m;
   do{m=MISS[Math.floor(Math.random()*MISS.length)];}while(m===cur&&MISS.length>1);
   cur=m;
-  $('sem').textContent=m.e;
+  $('ssvg').innerHTML = POSES[m.k] || `<span style="font-size:48px">${m.e}</span>`;
   $('smn').textContent=m.n;
   $('smd').textContent=m.d;
   holdStart=null;
