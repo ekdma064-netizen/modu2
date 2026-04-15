@@ -2,15 +2,18 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>스포츠 미션 게임</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{--g:#1D9E75;--gd:#0F6E56;--a:#EF9F27;--r:#E24B4A;--bg:#f8f8f6;--card:#fff;--bd:rgba(0,0,0,0.1);--tx:#1a1a18;--mu:#6b6b68;--ra:12px;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--tx);}
 .screen{display:none;}.screen.on{display:block;}
-#home{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1rem;}
+
+/* ── HOME ── */
+#home{display:flex;align-items:center;justify-content:center;height:100vh;padding:2rem 1rem;overflow-y:auto;}
 .card{background:var(--card);border:0.5px solid var(--bd);border-radius:var(--ra);padding:2rem;width:100%;max-width:400px;text-align:center;}
 .card h1{font-size:24px;font-weight:500;margin-bottom:8px;}
 .card p{font-size:14px;color:var(--mu);margin-bottom:20px;line-height:1.6;}
@@ -20,7 +23,9 @@ input:focus{border-color:var(--g);}
 .green{background:var(--g);color:#fff;}.green:hover{background:var(--gd);}
 .out{background:transparent;border:0.5px solid var(--bd);color:var(--tx);}.out:hover{background:#f0f0ee;}
 .div{font-size:13px;color:var(--mu);margin:10px 0;}
-#teacher{padding:1rem;min-height:100vh;}
+
+/* ── TEACHER ── */
+#teacher{padding:1rem;height:100vh;overflow-y:auto;}
 .th{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:1rem;}
 .th h2{font-size:20px;font-weight:500;}
 .bx{display:inline-block;padding:4px 12px;border-radius:99px;font-size:13px;font-weight:500;}
@@ -32,7 +37,7 @@ input:focus{border-color:var(--g);}
 .rcode{font-size:32px;font-weight:500;letter-spacing:6px;color:var(--g);text-align:center;}
 .rurl{font-size:11px;color:var(--mu);text-align:center;word-break:break-all;margin-top:4px;}
 .bigt{font-size:48px;font-weight:500;text-align:center;line-height:1;margin-bottom:8px;}
-.bw{height:8px;background:#eee;border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.tbw{height:8px;background:#eee;border-radius:4px;overflow:hidden;margin-bottom:12px;}
 .bb{height:100%;border-radius:4px;transition:width .1s linear,background .3s;}
 .lr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--bd);}
 .lr:last-child{border-bottom:none;}
@@ -41,26 +46,41 @@ input:focus{border-color:var(--g);}
 .lbw{height:5px;background:#eee;border-radius:3px;margin-top:3px;}
 .lbb{height:100%;border-radius:3px;background:var(--g);transition:width .5s;}
 .lsc{font-size:17px;font-weight:500;color:var(--g);}
-#student{padding:0;max-width:100%;margin:0;width:100%;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-.hud{display:flex;justify-content:space-between;padding:6px 12px;background:var(--card);border:none;border-bottom:0.5px solid var(--bd);border-radius:0;margin-bottom:0;flex-shrink:0;}
+
+/* ── STUDENT ── */
+#student{height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.wb{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;gap:10px;padding:2rem;}
+.wb .em{font-size:64px;}.wb h2{font-size:22px;font-weight:500;}.wb p{font-size:14px;color:var(--mu);}
+
+/* 게임 레이아웃 */
+#sgame{display:none;flex-direction:column;height:100vh;overflow:hidden;}
+.hud{display:flex;justify-content:space-between;padding:6px 16px;background:var(--card);border-bottom:0.5px solid var(--bd);flex-shrink:0;}
 .hi{text-align:center;}.hl{font-size:12px;color:var(--mu);}.hv{font-size:22px;font-weight:500;}
-.bw{height:6px;background:#eee;border-radius:0;overflow:hidden;margin-bottom:0;flex-shrink:0;}
-.mb{text-align:center;padding:0.5rem;background:var(--card);border:none;border-bottom:0.5px solid var(--bd);border-radius:0;margin-bottom:0;flex-shrink:0;height:30vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.mn{font-size:28px;font-weight:500;margin-bottom:4px;}.md{font-size:16px;color:var(--mu);}
-.cw{position:relative;width:100%;border-radius:0;overflow:hidden;border:none;background:#000;}
-.cw::before{content:'';display:block;padding-top:133%;}
-.cw video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
-.cw canvas{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
-.cw svg{position:absolute;top:0;left:0;width:100%;height:100%;}
-.cw #guide-msg{position:absolute;top:10px;left:50%;transform:translateX(-50%);}
-.cw .cs{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);}
-.cw video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
-.cw canvas{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
-.cs{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:13px;padding:4px 12px;border-radius:99px;white-space:nowrap;}
-#pose-status{font-size:16px;padding:6px 12px;flex-shrink:0;background:var(--card);border-top:0.5px solid var(--bd);text-align:center;}
-#btn-pass-wrap{flex-shrink:0;background:var(--card);padding:4px 12px;text-align:right;border-top:0.5px solid var(--bd);}
-#judge-panel{flex-shrink:0;background:var(--card);padding:10px 12px;border-top:0.5px solid var(--bd);}
-#judge-msg{font-size:22px;font-weight:500;margin-bottom:10px;line-height:1.4;}
+.pgbar{height:5px;background:#eee;flex-shrink:0;}
+
+/* 동작 가이드 패널 30% */
+#mission-panel{flex-shrink:0;height:30vh;background:var(--card);border-bottom:0.5px solid var(--bd);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;}
+#ssvg{display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
+#smn{font-size:26px;font-weight:500;margin-bottom:3px;}
+#smd{font-size:15px;color:var(--mu);text-align:center;}
+
+/* 카메라 패널 70% - 세로 비율 강제 */
+#cam-panel{flex:1;position:relative;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+#cam-inner{position:relative;height:100%;aspect-ratio:3/4;max-width:100%;}
+#svid{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
+#scan{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
+#guide-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;transition:opacity .5s;}
+#guide-msg{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);color:#fff;font-size:14px;padding:5px 14px;border-radius:99px;white-space:nowrap;transition:opacity .5s;text-align:center;}
+#scs{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:13px;padding:4px 12px;border-radius:99px;white-space:nowrap;}
+
+/* 하단 상태 */
+#bottom-bar{flex-shrink:0;background:var(--card);border-top:0.5px solid var(--bd);}
+#pose-status{text-align:center;padding:8px 12px;font-size:16px;color:var(--mu);}
+#btn-pass-wrap{text-align:right;padding:4px 12px 6px;}
+#judge-panel{padding:10px 12px;text-align:center;}
+#judge-msg{font-size:20px;font-weight:500;margin-bottom:10px;line-height:1.4;}
+
+/* RESULT */
 #result{display:none;position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;padding:2rem 1rem;}
 .ri{max-width:480px;margin:0 auto;text-align:center;}
 .pod{display:flex;justify-content:center;align-items:flex-end;gap:8px;margin:1rem 0 1.5rem;}
@@ -72,6 +92,7 @@ input:focus{border-color:var(--g);}
 </head>
 <body>
 
+<!-- HOME -->
 <div id="home" class="screen on">
   <div class="card">
     <div style="font-size:56px;margin-bottom:12px">🏃</div>
@@ -86,6 +107,7 @@ input:focus{border-color:var(--g);}
   </div>
 </div>
 
+<!-- TEACHER -->
 <div id="teacher" class="screen">
   <div class="th">
     <h2>선생님 화면 <span id="tbadge" class="bx bg"></span></h2>
@@ -108,7 +130,7 @@ input:focus{border-color:var(--g);}
       <div id="twait" style="text-align:center;padding:1rem;color:var(--mu);font-size:14px">학생들이 QR로 입장하면<br>여기 표시됩니다.</div>
       <div id="tplay" style="display:none">
         <div class="bigt" id="ttimer">5:00</div>
-        <div class="bw"><div class="bb" id="tbar" style="width:100%;background:var(--g)"></div></div>
+        <div class="tbw"><div class="bb" id="tbar" style="width:100%;background:var(--g)"></div></div>
       </div>
       <h3 id="tlbt">참가자</h3>
       <div id="tlb"></div>
@@ -116,70 +138,71 @@ input:focus{border-color:var(--g);}
   </div>
 </div>
 
+<!-- STUDENT -->
 <div id="student" class="screen">
+  <!-- 대기 -->
   <div id="swait" class="wb">
     <div class="em">⏳</div>
     <h2>선생님을 기다리는 중...</h2>
     <p id="swname"></p>
     <p id="sstat" style="color:var(--g);font-size:13px">연결 중...</p>
   </div>
-  <div id="sgame" style="display:flex;flex-direction:column;height:100vh;overflow:hidden;">
+
+  <!-- 게임 -->
+  <div id="sgame">
+    <!-- HUD -->
     <div class="hud">
       <div class="hi"><div class="hl">점수</div><div class="hv" id="ssc">0</div></div>
       <div class="hi"><div class="hl">시간</div><div class="hv" id="stm" style="color:var(--g)">5:00</div></div>
       <div class="hi"><div class="hl">콤보</div><div class="hv" id="scb">x1</div></div>
     </div>
-    <div class="bw"><div class="bb" id="sbar" style="width:100%;background:var(--g)"></div></div>
+    <div class="pgbar"><div class="bb" id="sbar" style="width:100%;background:var(--g)"></div></div>
 
-    <!-- 동작 가이드 30% -->
-    <div class="mb">
-      <div id="ssvg" style="height:110px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;">
-        <svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:110px">
-          <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-          <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-          <line x1="40" y1="35" x2="10" y2="8" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-          <line x1="40" y1="35" x2="70" y2="8" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-          <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-          <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+    <!-- 동작 가이드 (30%) -->
+    <div id="mission-panel">
+      <div id="ssvg"></div>
+      <div id="smn">준비 중...</div>
+      <div id="smd" style="font-size:15px;color:var(--mu)">카메라에 전신이 보이도록 서주세요</div>
+    </div>
+
+    <!-- 카메라 (70%) -->
+    <div id="cam-panel">
+      <div id="cam-inner">
+        <video id="svid" autoplay playsinline muted></video>
+        <canvas id="scan"></canvas>
+        <svg id="guide-svg" viewBox="0 0 100 133" preserveAspectRatio="xMidYMid meet" style="opacity:0.3">
+          <circle cx="50" cy="10" r="8" fill="none" stroke="white" stroke-width="2"/>
+          <line x1="50" y1="18" x2="50" y2="65" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="50" y1="28" x2="30" y2="50" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="50" y1="28" x2="70" y2="50" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="50" y1="65" x2="38" y2="100" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="38" y1="100" x2="35" y2="130" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="50" y1="65" x2="62" y2="100" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="62" y1="100" x2="65" y2="130" stroke="white" stroke-width="2" stroke-linecap="round"/>
         </svg>
+        <div id="guide-msg">카메라에 전신이 보이도록 서주세요</div>
+        <div id="scs">카메라 준비 중...</div>
       </div>
-      <div class="mn" id="smn">만세!</div>
-      <div class="md" id="smd">양손을 머리 위로 올리세요</div>
     </div>
 
-    <!-- 카메라 70% -->
-    <div class="cw">
-      <video id="svid" autoplay playsinline muted></video>
-      <canvas id="scan"></canvas>
-      <svg id="guide-svg" viewBox="0 0 100 133" preserveAspectRatio="xMidYMid meet"
-        style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0.25;transition:opacity .5s">
-        <circle cx="50" cy="10" r="8" fill="none" stroke="white" stroke-width="1.5"/>
-        <line x1="50" y1="18" x2="50" y2="65" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="50" y1="28" x2="30" y2="50" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="50" y1="28" x2="70" y2="50" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="50" y1="65" x2="38" y2="100" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="38" y1="100" x2="35" y2="130" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="50" y1="65" x2="62" y2="100" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="62" y1="100" x2="65" y2="130" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-      <div id="guide-msg" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;font-size:14px;padding:5px 14px;border-radius:99px;white-space:nowrap;transition:opacity .5s">전신이 화면 안에 들어오도록 서세요</div>
-      <div class="cs" id="scs">카메라 준비 중...</div>
-    </div>
-
-    <div id="pose-status" style="color:var(--mu)">동작을 따라 하세요!</div>
-    <div id="btn-pass-wrap">
-      <button class="btn out" id="btn-pass" style="width:auto;padding:6px 18px;margin:0;font-size:14px">패스 ⏭</button>
-    </div>
-    <div id="judge-panel" style="display:none">
-      <div id="judge-msg"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn green" id="btn-next" style="flex:1;margin:0">다음 동작 →</button>
-        <button class="btn out" id="btn-retry" style="flex:1;margin:0">다시 할게요 🔄</button>
+    <!-- 하단 상태바 -->
+    <div id="bottom-bar">
+      <div id="pose-status">카메라 위치를 맞춰주세요</div>
+      <div id="btn-pass-wrap">
+        <button class="btn out" id="btn-pass" style="width:auto;padding:6px 18px;margin:0;font-size:14px">패스 ⏭</button>
+      </div>
+      <div id="judge-panel" style="display:none">
+        <div id="judge-msg"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn green" id="btn-next" style="flex:1;margin:0">다음 동작 →</button>
+          <button class="btn out" id="btn-retry" style="flex:1;margin:0">다시 할게요 🔄</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- RESULT -->
 <div id="result">
   <div class="ri">
     <div style="font-size:52px;margin-bottom:8px">🏆</div>
@@ -201,66 +224,66 @@ const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const sb = createClient(SURL, SKEY);
 
 // ── SVG 동작 그림 ──
-function makeSVG(paths, vw, vh) {
-  return '<svg viewBox="0 0 '+vw+' '+vh+'" fill="none" xmlns="http://www.w3.org/2000/svg">'+paths+'</svg>';
-}
-const C = '#1D9E75';
-const head = (cx,cy) => '<circle cx="'+cx+'" cy="'+cy+'" r="10" fill="'+C+'"/>';
-const line = (x1,y1,x2,y2,w) => '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+C+'" stroke-width="'+(w||4)+'" stroke-linecap="round"/>';
+const C='#1D9E75';
+const h=(cx,cy)=>`<circle cx="${cx}" cy="${cy}" r="10" fill="${C}"/>`;
+const l=(x1,y1,x2,y2,w=4)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C}" stroke-width="${w}" stroke-linecap="round"/>`;
+const svg=(paths,vw=80,vh=120)=>`<svg viewBox="0 0 ${vw} ${vh}" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:90px">${paths}</svg>`;
+const legs=(cx=40)=>l(cx,70,cx-13,110,5)+l(cx,70,cx+13,110,5);
+const body=(cx=40)=>l(cx,22,cx,70,5);
 
-const POSES = {
-  raise_both:   makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,10,8)+line(40,35,70,8)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
-  raise_right:  makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,70,8)+line(40,35,20,55)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
-  raise_left:   makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,10,8)+line(40,35,60,55)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
-  arms_wide:    makeSVG(head(50,12)+line(50,22,50,70,5)+line(50,38,5,38)+line(50,38,95,38)+line(50,70,37,110,5)+line(50,70,63,110,5), 100,120),
-  attention:    makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,28,70)+line(40,35,52,70)+line(40,70,30,115,5)+line(40,70,50,115,5), 80,120),
-  bow:          makeSVG(head(20,30)+line(28,36,70,55,5)+line(40,43,30,15)+line(55,50,72,28)+line(70,55,60,100,5)+line(70,55,82,100,5), 100,120),
-  hands_hip:    makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,15,60)+line(40,38,65,60)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
-  cross_arms:   makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,62,54)+line(40,38,18,54)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
-  right_hip:    makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,65,58)+line(40,38,22,28)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
-  left_hip:     makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,15,58)+line(40,38,58,28)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
-  v_arms:       makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,18,6)+line(40,35,62,6)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
-  cheek_frame:  makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,15,20)+line(40,35,65,20)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
-  right_knee:   makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,20,55)+line(40,38,60,55)+line(40,70,27,110,5)+line(40,70,56,56,5)+line(56,56,62,82,5), 80,120),
-  left_knee:    makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,20,55)+line(40,38,60,55)+line(40,70,24,56,5)+line(24,56,18,82,5)+line(40,70,53,110,5), 80,120),
-  hands_head_wide: makeSVG(head(45,12)+line(45,22,45,70,5)+line(45,38,8,16)+line(45,38,82,16)+line(45,70,32,110,5)+line(45,70,58,110,5), 90,120),
-  right_forward: makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,90,38)+line(40,38,20,55)+line(40,70,27,110,5)+line(40,70,53,110,5), 100,120),
-  left_forward:  makeSVG(head(60,12)+line(60,22,60,70,5)+line(60,38,10,38)+line(60,38,80,55)+line(60,70,47,110,5)+line(60,70,73,110,5), 100,120),
-  sky_point:    makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,65,4)+line(40,35,20,55)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
-  lean_side:    makeSVG(head(55,15)+line(47,22,30,65,5)+line(42,38,15,30)+line(38,48,62,35)+line(30,65,18,108,5)+line(30,65,44,108,5), 100,120),
-  clap_above:   makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,28,4)+line(40,35,52,4)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
+const POSES={
+  raise_both:   svg(h(40,12)+body()+l(40,35,10,8)+l(40,35,70,8)+legs()),
+  raise_right:  svg(h(40,12)+body()+l(40,35,70,8)+l(40,35,20,55)+legs()),
+  raise_left:   svg(h(40,12)+body()+l(40,35,10,8)+l(40,35,60,55)+legs()),
+  arms_wide:    svg(h(50,12)+l(50,22,50,70,5)+l(50,38,5,38)+l(50,38,95,38)+l(50,70,37,110,5)+l(50,70,63,110,5),100,120),
+  attention:    svg(h(40,12)+body()+l(40,35,28,70)+l(40,35,52,70)+l(40,70,30,115,5)+l(40,70,50,115,5)),
+  bow:          svg(h(20,30)+l(28,36,70,55,5)+l(40,43,30,15)+l(55,50,72,28)+l(70,55,60,100,5)+l(70,55,82,100,5),100,120),
+  hands_hip:    svg(h(40,12)+body()+l(40,38,15,60)+l(40,38,65,60)+legs()),
+  cross_arms:   svg(h(40,12)+body()+l(40,38,62,54)+l(40,38,18,54)+legs()),
+  right_hip:    svg(h(40,12)+body()+l(40,38,65,58)+l(40,38,22,28)+legs()),
+  left_hip:     svg(h(40,12)+body()+l(40,38,15,58)+l(40,38,58,28)+legs()),
+  v_arms:       svg(h(40,12)+body()+l(40,35,18,6)+l(40,35,62,6)+legs()),
+  cheek_frame:  svg(h(40,12)+body()+l(40,35,15,20)+l(40,35,65,20)+legs()),
+  right_knee:   svg(h(40,12)+body()+l(40,38,20,55)+l(40,38,60,55)+l(40,70,27,110,5)+l(40,70,56,56,5)+l(56,56,62,82,5)),
+  left_knee:    svg(h(40,12)+body()+l(40,38,20,55)+l(40,38,60,55)+l(40,70,24,56,5)+l(24,56,18,82,5)+l(40,70,53,110,5)),
+  hands_head_wide: svg(h(45,12)+l(45,22,45,70,5)+l(45,38,8,16)+l(45,38,82,16)+l(45,70,32,110,5)+l(45,70,58,110,5),90,120),
+  right_forward: svg(h(40,12)+body()+l(40,38,90,38)+l(40,38,20,55)+legs(),100,120),
+  left_forward:  svg(h(60,12)+l(60,22,60,70,5)+l(60,38,10,38)+l(60,38,80,55)+l(60,70,47,110,5)+l(60,70,73,110,5),100,120),
+  sky_point:    svg(h(40,12)+body()+l(40,35,65,4)+l(40,35,20,55)+legs()),
+  lean_side:    svg(h(55,15)+l(47,22,30,65,5)+l(42,38,15,30)+l(38,48,62,35)+l(30,65,18,108,5)+l(30,65,44,108,5),100,120),
+  clap_above:   svg(h(40,12)+body()+l(40,35,28,4)+l(40,35,52,4)+legs()),
 };
 
-const MISS = [
-  {n:'만세!',         d:'양손을 머리 위로 높이 올리세요',        k:'raise_both'},
-  {n:'오른손 번쩍!',  d:'오른손만 머리 위로 올리세요',           k:'raise_right'},
-  {n:'왼손 번쩍!',   d:'왼손만 머리 위로 올리세요',             k:'raise_left'},
-  {n:'팔 벌려!',     d:'양팔을 어깨 높이로 옆으로 쭉 펴세요',   k:'arms_wide'},
-  {n:'차렷!',         d:'팔을 몸 옆에 붙이고 똑바로 서세요',     k:'attention'},
-  {n:'인사!',         d:'상체를 앞으로 45도 이상 숙이세요',      k:'bow'},
-  {n:'양손 허리!',   d:'양손을 허리에 올리세요',                k:'hands_hip'},
-  {n:'나비포옹!',     d:'양팔을 가슴 앞에서 교차하세요',         k:'cross_arms'},
-  {n:'오른손 허리!',  d:'오른손만 허리에 올리세요',               k:'right_hip'},
-  {n:'왼손 허리!',   d:'왼손만 허리에 올리세요',                k:'left_hip'},
-  {n:'V자 팔!',      d:'양팔을 머리 위로 V자 모양으로 올리세요', k:'v_arms'},
-  {n:'볼하트!',     d:'양손으로 양 볼을 감싸고 하트를 만드세요',     k:'cheek_frame'},
-  {n:'오른발 올려!',  d:'오른쪽 무릎을 허리 높이로 올리세요',    k:'right_knee'},
-  {n:'왼발 올려!',   d:'왼쪽 무릎을 허리 높이로 올리세요',      k:'left_knee'},
-  {n:'양손 머리!',   d:'양손을 머리 양옆에 넓게 올리세요',       k:'hands_head_wide'},
+const MISS=[
+  {n:'만세!',          d:'양손을 머리 위로 높이 올리세요',          k:'raise_both'},
+  {n:'오른손 번쩍!',   d:'오른손만 머리 위로 올리세요',             k:'raise_right'},
+  {n:'왼손 번쩍!',    d:'왼손만 머리 위로 올리세요',               k:'raise_left'},
+  {n:'팔 벌려!',      d:'양팔을 어깨 높이로 옆으로 쭉 펴세요',     k:'arms_wide'},
+  {n:'차렷!',          d:'팔을 몸 옆에 붙이고 똑바로 서세요',       k:'attention'},
+  {n:'인사!',          d:'상체를 앞으로 45도 이상 숙이세요',        k:'bow'},
+  {n:'양손 허리!',    d:'양손을 허리에 올리세요',                  k:'hands_hip'},
+  {n:'나비포옹!',      d:'양팔을 가슴 앞에서 교차하세요',           k:'cross_arms'},
+  {n:'오른손 허리!',   d:'오른손만 허리에 올리세요',                 k:'right_hip'},
+  {n:'왼손 허리!',    d:'왼손만 허리에 올리세요',                  k:'left_hip'},
+  {n:'V자 팔!',       d:'양팔을 머리 위로 V자 모양으로 올리세요',   k:'v_arms'},
+  {n:'볼하트!',        d:'양손으로 양 볼을 감싸고 하트를 만드세요',  k:'cheek_frame'},
+  {n:'오른발 올려!',   d:'오른쪽 무릎을 허리 높이로 올리세요',      k:'right_knee'},
+  {n:'왼발 올려!',    d:'왼쪽 무릎을 허리 높이로 올리세요',        k:'left_knee'},
+  {n:'양손 머리!',    d:'양손을 머리 양옆에 넓게 올리세요',         k:'hands_head_wide'},
   {n:'오른손 나란히!', d:'오른팔을 어깨 높이로 옆으로 쭉 뻗으세요', k:'right_forward'},
-  {n:'왼손 나란히!',  d:'왼팔을 어깨 높이로 옆으로 쭉 뻗으세요',  k:'left_forward'},
-  {n:'하늘 찌르기!', d:'오른손을 머리 위로 높이 올리세요',       k:'sky_point'},
-  {n:'옆으로 기울기!', d:'상체를 옆으로 기울이세요',              k:'lean_side'},
-  {n:'양손 위 박수!', d:'머리 위에서 양손을 가까이 모으세요',    k:'clap_above'},
+  {n:'왼손 나란히!',  d:'왼팔을 어깨 높이로 옆으로 쭉 뻗으세요',   k:'left_forward'},
+  {n:'하늘 찌르기!',  d:'오른손을 머리 위로 높이 올리세요',         k:'sky_point'},
+  {n:'옆으로 기울기!', d:'상체를 옆으로 기울이세요',                k:'lean_side'},
+  {n:'양손 위 박수!', d:'머리 위에서 양손을 가까이 모으세요',       k:'clap_above'},
 ];
 
-const DUR = 300;
-let ch, role='', myId='', myName='', room='';
-let players={}, lb=[];
-let score=0, combo=1, cnt=0, cur=MISS[0];
-let judging=false, holdStart=null;
-const HOLD_MS = 1000;
-let timer=null, pose=null;
+const DUR=300;
+let ch,role='',myId='',myName='',room='';
+let players={},lb=[];
+let score=0,combo=1,cnt=0,cur=null;
+let judging=false,holdStart=null,bodyReady=false;
+const HOLD_MS=1000;
+let timer=null,pose=null;
 
 const $=id=>document.getElementById(id);
 const ri=i=>['🥇','🥈','🥉'][i]??(i+1)+'위';
@@ -271,17 +294,17 @@ function msg(t,c='var(--r)'){$('emsg').textContent=t;$('emsg').style.color=c;}
 const p=new URLSearchParams(location.search);
 if(p.get('room'))$('icode').value=p.get('room').toUpperCase();
 
-$('btn-teacher').addEventListener('click', goTeacher);
-$('btn-student').addEventListener('click', goStudent);
-$('tsbtn').addEventListener('click', tStart);
-$('btn-next').addEventListener('click',  ()=>{closeJudge();pickM();});
-$('btn-retry').addEventListener('click', ()=>{closeJudge();});
-$('btn-pass').addEventListener('click',  ()=>{combo=1;$('scb').textContent='x1';closeJudge();pickM();});
+$('btn-teacher').addEventListener('click',goTeacher);
+$('btn-student').addEventListener('click',goStudent);
+$('tsbtn').addEventListener('click',tStart);
+$('btn-next').addEventListener('click',()=>{closeJudge();pickM();});
+$('btn-retry').addEventListener('click',()=>{closeJudge();});
+$('btn-pass').addEventListener('click',()=>{combo=1;$('scb').textContent='x1';closeJudge();pickM();});
 
 function closeJudge(){
-  judging=false; holdStart=null;
+  judging=false;holdStart=null;
   $('judge-panel').style.display='none';
-  $('pose-status').style.display='block';
+  $('btn-pass-wrap').style.display='';
   $('pose-status').textContent='동작을 따라 하세요!';
   $('pose-status').style.color='var(--mu)';
 }
@@ -289,35 +312,29 @@ function closeJudge(){
 function showJudge(correct){
   judging=true;
   $('judge-panel').style.display='block';
-  $('pose-status').style.display='none';
+  $('btn-pass-wrap').style.display='none';
   if(correct){
     const pts=10*combo;
-    score+=pts; cnt++;
-    combo=Math.min(combo+1,5);
-    $('ssc').textContent=score;
-    $('scb').textContent='x'+combo;
+    score+=pts;cnt++;combo=Math.min(combo+1,5);
+    $('ssc').textContent=score;$('scb').textContent='x'+combo;
     $('judge-msg').innerHTML='✅ 정확해요!&nbsp;<span style="color:var(--g)">+'+pts+'점</span>'+(combo>1?' 🔥 '+combo+'콤보!':'');
     ch.send({type:'broadcast',event:'student',payload:{t:'score',id:myId,score,combo,cnt}});
     setTimeout(()=>{closeJudge();pickM();},1500);
   } else {
-    combo=1; $('scb').textContent='x1';
+    combo=1;$('scb').textContent='x1';
     $('judge-msg').innerHTML='❌ 동작이 달라요!<br><span style="font-size:13px;color:var(--mu)">다시 해보거나 다음으로 넘어가세요</span>';
   }
 }
 
 // ══ 선생님 ══
 async function goTeacher(){
-  role='teacher'; myId='teacher';
+  role='teacher';myId='teacher';
   room=Math.random().toString(36).slice(2,8).toUpperCase();
   players={};
   msg('연결 중...','var(--g)');
-
   ch=sb.channel('room-'+room,{config:{broadcast:{self:false}}});
   ch.on('broadcast',{event:'student'},({payload})=>{
-    if(payload.t==='join'){
-      players[payload.id]={name:payload.name,score:0,combo:1,cnt:0};
-      renderLB();
-    }
+    if(payload.t==='join'){players[payload.id]={name:payload.name,score:0,combo:1,cnt:0};renderLB();}
     if(payload.t==='score'&&players[payload.id]){
       players[payload.id].score=payload.score;
       players[payload.id].combo=payload.combo;
@@ -325,18 +342,13 @@ async function goTeacher(){
       renderLB();
     }
   });
-
   let ok=false;
-  ch.subscribe(s=>{console.log('sub:',s);if(s==='SUBSCRIBED')ok=true;});
-  for(let i=0;i<100;i++){
-    await new Promise(r=>setTimeout(r,100));
-    if(ok)break;
-  }
+  ch.subscribe(s=>{if(s==='SUBSCRIBED')ok=true;});
+  for(let i=0;i<100;i++){await new Promise(r=>setTimeout(r,100));if(ok)break;}
   if(!ok){msg('연결 실패! 새로고침 후 다시 시도해 주세요.','var(--r)');return;}
   msg('');
   show('teacher');
-  $('tbadge').textContent=room;
-  $('tcode').textContent=room;
+  $('tbadge').textContent=room;$('tcode').textContent=room;
   const url=location.origin+location.pathname+'?room='+room;
   $('turl').textContent=url;
   new QRCode($('qrimg'),{text:url,width:148,height:148,correctLevel:QRCode.CorrectLevel.M});
@@ -347,33 +359,25 @@ function renderLB(){
   $('tcnt').textContent=lb.length+'명';
   const max=lb[0]?.score||1;
   $('tlb').innerHTML=lb.map((p,i)=>`
-    <div class="lr">
-      <div class="lrk">${ri(i)}</div>
-      <div class="li">
-        <div class="ln">${p.name}</div>
-        <div class="lbw"><div class="lbb" style="width:${Math.round(p.score/max*100)}%"></div></div>
-        <div class="ls">${p.score}점 · ${p.cnt||0}동작</div>
-      </div>
-      <div class="lsc">${p.score}</div>
-    </div>`).join('');
+    <div class="lr"><div class="lrk">${ri(i)}</div>
+    <div class="li"><div class="ln">${p.name}</div>
+    <div class="lbw"><div class="lbb" style="width:${Math.round(p.score/max*100)}%"></div></div>
+    <div class="ls">${p.score}점 · ${p.cnt||0}동작</div></div>
+    <div class="lsc">${p.score}</div></div>`).join('');
 }
 
 function tStart(){
   ch.send({type:'broadcast',event:'teacher',payload:{t:'start'}});
-  $('tsbtn').style.display='none';
-  $('trbtn').style.display='';
-  $('twait').style.display='none';
-  $('tplay').style.display='';
+  $('tsbtn').style.display='none';$('trbtn').style.display='';
+  $('twait').style.display='none';$('tplay').style.display='';
   $('tlbt').textContent='실시간 순위';
   let s=DUR;
   timer=setInterval(()=>{
-    s-=0.1;
-    const pct=Math.max(0,s/DUR*100);
+    s-=0.1;const pct=Math.max(0,s/DUR*100);
     const c=pct>50?'var(--g)':pct>25?'var(--a)':'var(--r)';
     $('ttimer').textContent=fmt(Math.max(0,s));
     $('ttimer').style.color=c;
-    $('tbar').style.width=pct+'%';
-    $('tbar').style.background=c;
+    $('tbar').style.width=pct+'%';$('tbar').style.background=c;
     if(s<=0){clearInterval(timer);ch.send({type:'broadcast',event:'teacher',payload:{t:'end',players}});showResult();}
   },100);
 }
@@ -383,25 +387,20 @@ async function goStudent(){
   const name=$('iname').value.trim();
   const code=$('icode').value.trim().toUpperCase();
   if(!name||!code){msg('이름과 방 코드를 입력해 주세요!');return;}
-  myName=name; room=code; role='student';
+  myName=name;room=code;role='student';
   myId='s'+Date.now()+Math.random().toString(36).slice(2,5);
   msg('연결 중...','var(--g)');
-
   ch=sb.channel('room-'+code,{config:{broadcast:{self:false}}});
   ch.on('broadcast',{event:'teacher'},({payload})=>{
-    if(payload.t==='start') startGame();
+    if(payload.t==='start')startGame();
     if(payload.t==='end'){
       lb=Object.entries(payload.players||{}).map(([id,v])=>({id,...v})).sort((a,b)=>b.score-a.score);
       showResult();
     }
   });
-
   let ok=false;
   ch.subscribe(s=>{if(s==='SUBSCRIBED')ok=true;});
-  for(let i=0;i<100;i++){
-    await new Promise(r=>setTimeout(r,100));
-    if(ok)break;
-  }
+  for(let i=0;i<100;i++){await new Promise(r=>setTimeout(r,100));if(ok)break;}
   if(!ok){msg('연결 실패! 방 코드를 확인해 주세요.','var(--r)');return;}
   ch.send({type:'broadcast',event:'student',payload:{t:'join',id:myId,name}});
   msg('');
@@ -411,20 +410,21 @@ async function goStudent(){
 }
 
 function startGame(){
-  score=0;combo=1;cnt=0;
+  score=0;combo=1;cnt=0;bodyReady=false;cur=null;
   $('swait').style.display='none';
   $('sgame').style.display='flex';
-  pickM();
+  // 전신 인식 전까지 미션 패널 대기 상태
+  $('ssvg').innerHTML='';
+  $('smn').textContent='준비 중...';
+  $('smd').textContent='카메라에 전신이 보이도록 서주세요';
   setupCam();
   let s=DUR;
   timer=setInterval(()=>{
-    s-=0.1;
-    const pct=Math.max(0,s/DUR*100);
+    s-=0.1;const pct=Math.max(0,s/DUR*100);
     const c=pct>50?'var(--g)':pct>25?'var(--a)':'var(--r)';
     $('stm').textContent=fmt(Math.max(0,s));
     $('stm').style.color=c;
-    $('sbar').style.width=pct+'%';
-    $('sbar').style.background=c;
+    $('sbar').style.width=pct+'%';$('sbar').style.background=c;
     if(s<=0)clearInterval(timer);
   },100);
 }
@@ -433,8 +433,7 @@ function pickM(){
   let m;
   do{m=MISS[Math.floor(Math.random()*MISS.length)];}while(m===cur&&MISS.length>1);
   cur=m;
-  const svg = POSES[m.k] || POSES['raise_both'];
-  $('ssvg').innerHTML = '<svg viewBox="' + svg.match(/viewBox="([^"]+)"/)[1] + '" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:110px">' + svg.replace(/<svg[^>]*>/,'').replace('</svg>','') + '</svg>';
+  $('ssvg').innerHTML=POSES[m.k]||'';
   $('smn').textContent=m.n;
   $('smd').textContent=m.d;
   holdStart=null;
@@ -446,20 +445,20 @@ function showResult(){
   const v=$('svid');
   if(v?.srcObject)v.srcObject.getTracks().forEach(t=>t.stop());
   $('result').style.display='block';
-  const t3=lb.slice(0,3);
-  const ord=[t3[1],t3[0],t3[2]];
+  const t3=lb.slice(0,3),ord=[t3[1],t3[0],t3[2]];
   const hs=[100,130,80],cs=['#B4B2A9','#EF9F27','#9FE1CB'],ms=['🥈','🥇','🥉'];
   $('rpod').innerHTML=ord.map((p,i)=>p?
-    '<div class="pi"><div class="pn">'+p.name+'</div><div class="ps">'+p.score+'점</div><div class="pb" style="height:'+hs[i]+'px;background:'+cs[i]+'">'+ms[i]+'</div></div>'
+    `<div class="pi"><div class="pn">${p.name}</div><div class="ps">${p.score}점</div><div class="pb" style="height:${hs[i]}px;background:${cs[i]}">${ms[i]}</div></div>`
     :'<div class="pi"></div>').join('');
   $('rlb').innerHTML=lb.map((p,i)=>
-    '<div class="fr '+(p.id===myId?'me2':'')+'"><span>'+ri(i)+' '+p.name+(p.id===myId?' (나)':'')+'</span><span style="font-weight:500;color:var(--g)">'+p.score+'점</span></div>'
+    `<div class="fr ${p.id===myId?'me2':''}"><span>${ri(i)} ${p.name}${p.id===myId?' (나)':''}</span><span style="font-weight:500;color:var(--g)">${p.score}점</span></div>`
   ).join('');
 }
 
+// ── 카메라 ──
 async function setupCam(){
   try{
-    const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+    const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:720},height:{ideal:1280}}});
     $('svid').srcObject=st;
     $('scs').textContent='AI 인식 로딩 중...';
     loadPose();
@@ -470,14 +469,14 @@ function loadPose(){
   const tryLoad=()=>{
     if(!window.Pose){setTimeout(tryLoad,500);return;}
     pose=new window.Pose({locateFile:f=>'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/'+f});
-    pose.setOptions({modelComplexity:0,smoothLandmarks:true,minDetectionConfidence:.5,minTrackingConfidence:.5});
+    pose.setOptions({modelComplexity:1,smoothLandmarks:true,minDetectionConfidence:.4,minTrackingConfidence:.4});
     pose.onResults(onPose);
     pose.initialize().then(()=>{
       $('scs').textContent='준비 완료!';
       const v=$('svid'),c=$('scan');
       async function det(){
         if(!pose)return;
-        c.width=v.videoWidth||320;c.height=v.videoHeight||240;
+        c.width=v.videoWidth||480;c.height=v.videoHeight||640;
         try{await pose.send({image:v});}catch{}
         requestAnimationFrame(det);
       }
@@ -488,87 +487,95 @@ function loadPose(){
   tryLoad();
 }
 
+// ── 포즈 판별 ──
 function onPose(res){
-  const guideSvg = $('guide-svg');
-  const guideMsg = $('guide-msg');
+  const guideSvg=$('guide-svg');
+  const guideMsg=$('guide-msg');
 
   if(!res.poseLandmarks){
-    guideSvg.style.opacity='0.25';
+    guideSvg.style.opacity='0.3';
     guideMsg.style.opacity='1';
-    guideMsg.textContent='전신이 화면 안에 들어오도록 서세요';
-    if(!judging){
-      $('pose-status').textContent='사람을 인식 중...';
-      $('pose-status').style.color='var(--mu)';
-    }
+    guideMsg.textContent='카메라에 전신이 보이도록 서주세요';
+    $('pose-status').textContent='📷 사람을 인식 중...';
+    $('pose-status').style.color='var(--mu)';
     return;
   }
 
   const L=res.poseLandmarks;
-  // 카메라 좌우반전 보정: MediaPipe 기준 left/right를 화면 기준으로 swap
-  const lw=L[16], rw=L[15]; // 화면상 왼손=MediaPipe 오른손, 오른손=MediaPipe 왼손
-  const ls=L[12], rs=L[11]; // 화면상 왼어깨=MediaPipe 오른어깨
-  const lh=L[24], rh=L[23]; // 화면상 왼엉덩이=MediaPipe 오른엉덩이
+  const nose=L[0];
+  // 좌우반전 보정
+  const lw=L[16],rw=L[15];
+  const ls=L[12],rs=L[11];
+  const lh=L[24],rh=L[23];
+  const lAnkle=L[28],rAnkle=L[27];
 
-  // 전신 확인: 핵심 관절만 체크 (발목은 선택적)
-  const keyPoints=[nose,ls,rs,lh,rh];
-  const allIn = keyPoints.every(pt=>pt && pt.x>0.03 && pt.x<0.97 && pt.y>0.03 && pt.y<0.97);
-  const hipOk = lh && rh && lh.y < 0.92 && rh.y < 0.92;
-  // 발목은 있으면 확인, 없어도 엉덩이까지 보이면 통과
-  const ankleOk = (lAnkle && rAnkle)
-    ? (lAnkle.y < 0.97 && rAnkle.y < 0.97)
-    : hipOk;
+  // 전신 인식 체크 - 코+어깨 필수, 엉덩이 권장
+  const coreOk = nose&&ls&&rs&&
+    nose.x>0.02&&nose.x<0.98&&nose.y>0.02&&nose.y<0.95&&
+    ls.visibility>0.3&&rs.visibility>0.3;
+  const hipOk = lh&&rh&&lh.visibility>0.3&&rh.visibility>0.3&&lh.y<0.97&&rh.y<0.97;
 
-  if(!allIn || !hipOk){
+  if(!coreOk){
     guideSvg.style.opacity='0.3';
     guideMsg.style.opacity='1';
-    if(nose && nose.y < 0.05) guideMsg.textContent='아래로 내려가세요';
-    else if(!hipOk) guideMsg.textContent='뒤로 물러서서 전신을 보여주세요';
-    else guideMsg.textContent='전신이 화면 안에 들어오도록 서세요';
-    if(!judging){
-      $('pose-status').textContent='📏 위치를 맞춰주세요!';
-      $('pose-status').style.color='var(--a)';
-    }
+    guideMsg.textContent='카메라에 전신이 보이도록 서주세요';
+    $('pose-status').textContent='📏 위치를 맞춰주세요!';
+    $('pose-status').style.color='var(--a)';
+    bodyReady=false;
     return;
   }
 
-  if(!ankleOk){
-    guideMsg.style.opacity='1';
-    guideMsg.textContent='발이 보이도록 뒤로 조금 물러서세요';
+  if(!hipOk){
     guideSvg.style.opacity='0.15';
-  } else {
-    guideSvg.style.opacity='0';
-    guideMsg.style.opacity='0';
+    guideMsg.style.opacity='1';
+    guideMsg.textContent='뒤로 조금 물러서세요';
+    $('pose-status').textContent='📏 조금 더 뒤로 서주세요';
+    $('pose-status').style.color='var(--a)';
+    bodyReady=false;
+    return;
   }
 
-  if(judging)return;
+  // 전신 인식 완료
+  guideSvg.style.opacity='0';
+  guideMsg.style.opacity='0';
+
+  // 처음 전신 인식되면 미션 시작
+  if(!bodyReady){
+    bodyReady=true;
+    pickM();
+    $('pose-status').textContent='동작을 따라 하세요!';
+    $('pose-status').style.color='var(--mu)';
+  }
+
+  if(judging||!cur)return;
 
   const shW=Math.abs(ls.x-rs.x)||0.15;
   const shMidY=(ls.y+rs.y)/2;
   const hipMidY=(lh.y+rh.y)/2;
-  const bodyH=hipMidY-shMidY;
+  const bodyH=Math.max(hipMidY-shMidY,0.1);
   let hit=false;
   const k=cur.k;
 
-  if(k==='raise_both')        hit=lw.y<nose.y&&rw.y<nose.y;
-  else if(k==='raise_right')  hit=rw.y<nose.y&&lw.y>ls.y;
-  else if(k==='raise_left')   hit=lw.y<nose.y&&rw.y>rs.y;
-  else if(k==='arms_wide')    hit=Math.abs(lw.x-rw.x)>shW*1.8&&Math.abs(lw.y-ls.y)<shW*0.5&&Math.abs(rw.y-rs.y)<shW*0.5;
-  else if(k==='attention')    hit=Math.abs(lw.x-lh.x)<shW*0.4&&Math.abs(lw.y-lh.y)<shW*0.5&&Math.abs(rw.x-rh.x)<shW*0.4&&Math.abs(rw.y-rh.y)<shW*0.5;
-  else if(k==='bow')          hit=nose.y>shMidY||(lw.y>nose.y+bodyH*0.2&&rw.y>nose.y+bodyH*0.2);
-  else if(k==='hands_hip')    hit=Math.abs(lw.y-lh.y)<bodyH*0.3&&Math.abs(rw.y-rh.y)<bodyH*0.3;
-  else if(k==='cross_arms')   hit=lw.y>ls.y&&lw.y<hipMidY&&rw.y>rs.y&&rw.y<hipMidY&&lw.x>rs.x&&rw.x<ls.x;
-  else if(k==='right_hip')    hit=Math.abs(rw.y-rh.y)<bodyH*0.3&&Math.abs(lw.y-lh.y)>bodyH*0.35;
-  else if(k==='left_hip')     hit=Math.abs(lw.y-lh.y)<bodyH*0.3&&Math.abs(rw.y-rh.y)>bodyH*0.35;
-  else if(k==='v_arms')       hit=lw.y<nose.y&&rw.y<nose.y&&Math.abs(lw.x-rw.x)>shW*1.2;
-  else if(k==='cheek_frame')  hit=lw.y>nose.y&&lw.y<ls.y&&rw.y>nose.y&&rw.y<rs.y&&Math.abs(lw.x-ls.x)<shW*0.6&&Math.abs(rw.x-rs.x)<shW*0.6;
-  else if(k==='right_knee')   {const rk=L[27];hit=rk&&rk.y<rh.y-bodyH*0.1;}
-  else if(k==='left_knee')    {const lk=L[28];hit=lk&&lk.y<lh.y-bodyH*0.1;}
+  if(k==='raise_both')         hit=lw.y<nose.y&&rw.y<nose.y;
+  else if(k==='raise_right')   hit=rw.y<nose.y&&lw.y>ls.y;
+  else if(k==='raise_left')    hit=lw.y<nose.y&&rw.y>rs.y;
+  else if(k==='arms_wide')     hit=Math.abs(lw.x-rw.x)>shW*1.8&&Math.abs(lw.y-ls.y)<shW*0.5&&Math.abs(rw.y-rs.y)<shW*0.5;
+  else if(k==='attention')     hit=Math.abs(lw.x-lh.x)<shW*0.4&&Math.abs(lw.y-lh.y)<shW*0.5&&Math.abs(rw.x-rh.x)<shW*0.4&&Math.abs(rw.y-rh.y)<shW*0.5;
+  else if(k==='bow')           hit=nose.y>shMidY||(lw.y>nose.y+bodyH*0.2&&rw.y>nose.y+bodyH*0.2);
+  else if(k==='hands_hip')     hit=Math.abs(lw.y-lh.y)<bodyH*0.3&&Math.abs(rw.y-rh.y)<bodyH*0.3;
+  else if(k==='cross_arms')    hit=lw.y>ls.y&&lw.y<hipMidY&&rw.y>rs.y&&rw.y<hipMidY&&lw.x>rs.x&&rw.x<ls.x;
+  else if(k==='right_hip')     hit=Math.abs(rw.y-rh.y)<bodyH*0.3&&Math.abs(lw.y-lh.y)>bodyH*0.35;
+  else if(k==='left_hip')      hit=Math.abs(lw.y-lh.y)<bodyH*0.3&&Math.abs(rw.y-rh.y)>bodyH*0.35;
+  else if(k==='v_arms')        hit=lw.y<nose.y&&rw.y<nose.y&&Math.abs(lw.x-rw.x)>shW*1.2;
+  else if(k==='cheek_frame')   hit=lw.y>nose.y&&lw.y<ls.y&&rw.y>nose.y&&rw.y<rs.y&&Math.abs(lw.x-ls.x)<shW*0.6&&Math.abs(rw.x-rs.x)<shW*0.6;
+  else if(k==='right_knee')    {const rk=L[27];hit=rk&&rk.visibility>0.3&&rk.y<rh.y-bodyH*0.1;}
+  else if(k==='left_knee')     {const lk=L[28];hit=lk&&lk.visibility>0.3&&lk.y<lh.y-bodyH*0.1;}
   else if(k==='hands_head_wide') hit=lw.y<ls.y&&lw.y>nose.y*0.8&&rw.y<rs.y&&rw.y>nose.y*0.8&&Math.abs(lw.x-rw.x)>shW*1.3;
   else if(k==='right_forward') hit=Math.abs(rw.y-rs.y)<shW*0.5&&rw.x>rs.x+shW*0.3&&lw.y>ls.y;
   else if(k==='left_forward')  hit=Math.abs(lw.y-ls.y)<shW*0.5&&lw.x<ls.x-shW*0.3&&rw.y>rs.y;
-  else if(k==='sky_point')    hit=rw.y<nose.y&&lw.y>ls.y;
-  else if(k==='lean_side')    {const le=Math.min(ls.x,rs.x)-shW*0.3,re=Math.max(ls.x,rs.x)+shW*0.3;hit=nose.x<le||nose.x>re;}
-  else if(k==='clap_above')   hit=lw.y<nose.y&&rw.y<nose.y&&Math.abs(lw.x-rw.x)<shW*0.4;
+  else if(k==='sky_point')     hit=rw.y<nose.y&&lw.y>ls.y;
+  else if(k==='lean_side')     {const le=Math.min(ls.x,rs.x)-shW*0.3,re=Math.max(ls.x,rs.x)+shW*0.3;hit=nose.x<le||nose.x>re;}
+  else if(k==='clap_above')    hit=lw.y<nose.y&&rw.y<nose.y&&Math.abs(lw.x-rw.x)<shW*0.4;
 
   const ps=$('pose-status');
   if(hit){
