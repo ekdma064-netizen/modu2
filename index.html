@@ -44,9 +44,9 @@ input:focus{border-color:var(--g);}
 #student{padding:.75rem;max-width:480px;margin:0 auto;}
 .hud{display:flex;justify-content:space-between;padding:8px 12px;background:var(--card);border:0.5px solid var(--bd);border-radius:var(--ra);margin-bottom:8px;}
 .hi{text-align:center;}.hl{font-size:11px;color:var(--mu);}.hv{font-size:20px;font-weight:500;}
-.mb{text-align:center;padding:1.2rem;background:var(--card);border:0.5px solid var(--bd);border-radius:var(--ra);margin-bottom:10px;}
-.me{font-size:58px;line-height:1;margin-bottom:10px;}.mn{font-size:22px;font-weight:500;margin-bottom:4px;}.md{font-size:13px;color:var(--mu);}
-.cw{position:relative;width:100%;max-width:100%;margin:0 auto 10px;border-radius:var(--ra);overflow:hidden;border:0.5px solid var(--bd);background:#000;aspect-ratio:3/4;}
+.mb{text-align:center;padding:1rem;background:var(--card);border:0.5px solid var(--bd);border-radius:var(--ra);margin-bottom:10px;}
+.mn{font-size:22px;font-weight:500;margin-bottom:4px;}.md{font-size:13px;color:var(--mu);}
+.cw{position:relative;width:100%;margin:0 auto 10px;border-radius:var(--ra);overflow:hidden;border:0.5px solid var(--bd);background:#000;aspect-ratio:3/4;}
 .cw video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 .cw canvas{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
 .cs{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:3px 10px;border-radius:99px;white-space:nowrap;}
@@ -122,28 +122,20 @@ input:focus{border-color:var(--g);}
       <div class="hi"><div class="hl">콤보</div><div class="hv" id="scb">x1</div></div>
     </div>
     <div class="bw" style="margin-bottom:10px"><div class="bb" id="sbar" style="width:100%;background:var(--g)"></div></div>
-
     <div class="mb">
-      <div id="ssvg" style="width:100px;height:130px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;"></div>
+      <div id="ssvg" style="width:100px;height:120px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;"></div>
       <div class="mn" id="smn">만세!</div>
       <div class="md" id="smd">양손을 머리 위로 올리세요</div>
     </div>
-
     <div class="cw">
       <video id="svid" autoplay playsinline muted></video>
       <canvas id="scan"></canvas>
       <div class="cs" id="scs">카메라 준비 중...</div>
     </div>
-
-    <!-- 동작 인식 상태 -->
-    <div id="pose-status" style="text-align:center;padding:10px;font-size:15px;color:var(--mu);margin-bottom:8px">동작을 따라 하세요!</div>
-
-    <!-- 패스 버튼: 항상 표시 -->
+    <div id="pose-status" style="text-align:center;padding:8px;font-size:14px;color:var(--mu);margin-bottom:6px">동작을 따라 하세요!</div>
     <div style="text-align:right;margin-bottom:6px">
-      <button class="btn out" id="btn-pass" style="width:auto;padding:6px 16px;margin:0;font-size:13px">이 동작 패스 ⏭</button>
+      <button class="btn out" id="btn-pass" style="width:auto;padding:6px 16px;margin:0;font-size:13px">패스 ⏭</button>
     </div>
-
-    <!-- 판정 패널 -->
     <div id="judge-panel" style="display:none;text-align:center;margin-bottom:10px">
       <div id="judge-msg" style="font-size:20px;font-weight:500;margin-bottom:12px;line-height:1.5"></div>
       <div style="display:flex;gap:8px">
@@ -151,7 +143,6 @@ input:focus{border-color:var(--g);}
         <button class="btn out" id="btn-retry" style="flex:1;margin:0">다시 할게요 🔄</button>
       </div>
     </div>
-
     <div class="fb" id="sfb"></div>
   </div>
 </div>
@@ -172,197 +163,65 @@ input:focus{border-color:var(--g);}
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SUPA_URL = 'https://xfqxorbmfxclrhxtweib.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXhvcmJtZnhjbHJoeHR3ZWliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDUwNDMsImV4cCI6MjA5MTY4MTA0M30.GIC1E2Lqa_0lX9YOZ_Etkuv1YMIddrQ36Lm9kRHSJwo';
-const sb = createClient(SUPA_URL, SUPA_KEY);
+const SURL = 'https://xfqxorbmfxclrhxtweib.supabase.co';
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXhvcmJtZnhjbHJoeHR3ZWliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDUwNDMsImV4cCI6MjA5MTY4MTA0M30.GIC1E2Lqa_0lX9YOZ_Etkuv1YMIddrQ36Lm9kRHSJwo';
+const sb = createClient(SURL, SKEY);
+
+// ── SVG 동작 그림 ──
+function makeSVG(paths, vw, vh) {
+  return '<svg viewBox="0 0 '+vw+' '+vh+'" fill="none" xmlns="http://www.w3.org/2000/svg">'+paths+'</svg>';
+}
+const C = '#1D9E75';
+const head = (cx,cy) => '<circle cx="'+cx+'" cy="'+cy+'" r="10" fill="'+C+'"/>';
+const line = (x1,y1,x2,y2,w) => '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+C+'" stroke-width="'+(w||4)+'" stroke-linecap="round"/>';
 
 const POSES = {
-  raise_both:   `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="10" y2="10" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="70" y2="10" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="25" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="55" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  raise_right:  `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="70" y2="10" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="20" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="25" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="55" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  raise_left:   `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="10" y2="10" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="60" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="25" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="55" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  arms_wide:    `<svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="50" y1="22" x2="50" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="50" y1="38" x2="5"  y2="38" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="50" y1="38" x2="95" y2="38" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="50" y1="70" x2="35" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="50" y1="70" x2="65" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  attention:    `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="28" y2="70" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="52" y2="70" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="30" y2="115" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="50" y2="115" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  bow:          `<svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="20" cy="30" r="10" fill="#1D9E75"/>
-    <line x1="28" y1="36" x2="70" y2="55" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="43" x2="30" y2="15" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="55" y1="50" x2="72" y2="28" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="70" y1="55" x2="60" y2="100" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="70" y1="55" x2="82" y2="100" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  hands_hip:    `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="15" y2="60" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="65" y2="60" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  cross_arms:   `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="58" y2="52" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="22" y2="52" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  right_hip:    `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="65" y2="60" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="25" y2="30" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  v_arms:       `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="15" y2="8"  stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="65" y2="8"  stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  cheek_frame:  `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="15" y2="20" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="65" y2="20" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  right_knee:   `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="20" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="60" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="55" y2="55"  stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="55" y1="55" x2="60" y2="80"  stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  left_hip:     `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="15" y2="60" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="55" y2="30" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  left_knee:    `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="20" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="60" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="25" y2="55"  stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="25" y1="55" x2="20" y2="80"  stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  hands_head_wide:`<svg viewBox="0 0 90 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="45" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="45" y1="22" x2="45" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="45" y1="38" x2="10" y2="18" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="45" y1="38" x2="80" y2="18" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="45" y1="70" x2="32" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="45" y1="70" x2="58" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  right_forward: `<svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="90" y2="38" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="38" x2="20" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  sky_point:    `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="65" y2="5"  stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="20" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  lean_side:    `<svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="55" cy="15" r="10" fill="#1D9E75"/>
-    <line x1="47" y1="22" x2="30" y2="65" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="42" y1="38" x2="15" y2="30" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="38" y1="48" x2="62" y2="35" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="30" y1="65" x2="18" y2="108" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="30" y1="65" x2="44" y2="108" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  clap_above:   `<svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="28" y2="5"  stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="35" x2="52" y2="5"  stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
-  left_forward: `<svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="60" cy="12" r="10" fill="#1D9E75"/>
-    <line x1="60" y1="22" x2="60" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="60" y1="38" x2="10" y2="38" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="60" y1="38" x2="80" y2="55" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
-    <line x1="60" y1="70" x2="47" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-    <line x1="60" y1="70" x2="73" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
-  </svg>`,
+  raise_both:   makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,10,8)+line(40,35,70,8)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
+  raise_right:  makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,70,8)+line(40,35,20,55)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
+  raise_left:   makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,10,8)+line(40,35,60,55)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
+  arms_wide:    makeSVG(head(50,12)+line(50,22,50,70,5)+line(50,38,5,38)+line(50,38,95,38)+line(50,70,37,110,5)+line(50,70,63,110,5), 100,120),
+  attention:    makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,28,70)+line(40,35,52,70)+line(40,70,30,115,5)+line(40,70,50,115,5), 80,120),
+  bow:          makeSVG(head(20,30)+line(28,36,70,55,5)+line(40,43,30,15)+line(55,50,72,28)+line(70,55,60,100,5)+line(70,55,82,100,5), 100,120),
+  hands_hip:    makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,15,60)+line(40,38,65,60)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
+  cross_arms:   makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,62,54)+line(40,38,18,54)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
+  right_hip:    makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,65,58)+line(40,38,22,28)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
+  left_hip:     makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,15,58)+line(40,38,58,28)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
+  v_arms:       makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,18,6)+line(40,35,62,6)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
+  cheek_frame:  makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,15,20)+line(40,35,65,20)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
+  right_knee:   makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,20,55)+line(40,38,60,55)+line(40,70,27,110,5)+line(40,70,56,56,5)+line(56,56,62,82,5), 80,120),
+  left_knee:    makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,20,55)+line(40,38,60,55)+line(40,70,24,56,5)+line(24,56,18,82,5)+line(40,70,53,110,5), 80,120),
+  hands_head_wide: makeSVG(head(45,12)+line(45,22,45,70,5)+line(45,38,8,16)+line(45,38,82,16)+line(45,70,32,110,5)+line(45,70,58,110,5), 90,120),
+  right_forward: makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,38,90,38)+line(40,38,20,55)+line(40,70,27,110,5)+line(40,70,53,110,5), 100,120),
+  left_forward:  makeSVG(head(60,12)+line(60,22,60,70,5)+line(60,38,10,38)+line(60,38,80,55)+line(60,70,47,110,5)+line(60,70,73,110,5), 100,120),
+  sky_point:    makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,65,4)+line(40,35,20,55)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
+  lean_side:    makeSVG(head(55,15)+line(47,22,30,65,5)+line(42,38,15,30)+line(38,48,62,35)+line(30,65,18,108,5)+line(30,65,44,108,5), 100,120),
+  clap_above:   makeSVG(head(40,12)+line(40,22,40,70,5)+line(40,35,28,4)+line(40,35,52,4)+line(40,70,27,110,5)+line(40,70,53,110,5), 80,120),
 };
-  {n:'만세!',        e:'🙌', d:'양손을 머리 위로 높이 올리세요',        k:'raise_both'},
-  {n:'오른손 번쩍!',  e:'👋', d:'오른손만 머리 위로 올리세요',           k:'raise_right'},
-  {n:'왼손 번쩍!',   e:'🤚', d:'왼손만 머리 위로 올리세요',             k:'raise_left'},
-  {n:'팔 벌려!',     e:'🤸', d:'양팔을 어깨 높이로 옆으로 쭉 펴세요',   k:'arms_wide'},
-  {n:'차렷!',        e:'🧍', d:'팔을 몸 옆에 붙이고 똑바로 서세요',     k:'attention'},
-  {n:'인사!',        e:'🙇', d:'상체를 앞으로 45도 이상 숙이세요',      k:'bow'},
-  {n:'양손 허리!',   e:'🫰', d:'양손을 허리에 올리세요',                k:'hands_hip'},
-  {n:'나비포옹!',     e:'🤗', d:'양팔을 가슴 앞에서 교차하세요',         k:'cross_arms'},
-  {n:'오른손 허리!',  e:'💃', d:'오른손만 허리에 올리세요',               k:'right_hip'},
-  {n:'V자 팔!',      e:'✌️', d:'양팔을 머리 위로 V자 모양으로 올리세요', k:'v_arms'},
-  {n:'볼 감싸!',     e:'🌸', d:'양손을 귀 옆 얼굴 높이로 올리세요',     k:'cheek_frame'},
-  {n:'오른발 올려!',  e:'🦵', d:'오른쪽 무릎을 허리 높이로 올리세요',    k:'right_knee'},
-  {n:'왼손 허리!',   e:'🕺', d:'왼손만 허리에 올리세요',                k:'left_hip'},
-  {n:'왼발 올려!',   e:'🦿', d:'왼쪽 무릎을 허리 높이로 올리세요',      k:'left_knee'},
-  {n:'양손 머리!',   e:'👐', d:'양손을 머리 양옆에 넓게 올리세요',       k:'hands_head_wide'},
-  {n:'오른손 나란히!', e:'👉', d:'오른팔을 어깨 높이로 옆으로 쭉 뻗으세요', k:'right_forward'},
-  {n:'하늘 찌르기!', e:'☝️', d:'오른손을 머리 위로 높이 올리세요',       k:'sky_point'},
-  {n:'옆으로 기울기!', e:'🤸', d:'상체를 옆으로 기울이세요',              k:'lean_side'},
-  {n:'양손 위 박수!', e:'👏', d:'머리 위에서 양손을 가까이 모으세요',    k:'clap_above'},
-  {n:'왼손 나란히!',  e:'👈', d:'왼팔을 어깨 높이로 옆으로 쭉 뻗으세요',  k:'left_forward'},
-];
-const DUR = 300;
 
+const MISS = [
+  {n:'만세!',         d:'양손을 머리 위로 높이 올리세요',        k:'raise_both'},
+  {n:'오른손 번쩍!',  d:'오른손만 머리 위로 올리세요',           k:'raise_right'},
+  {n:'왼손 번쩍!',   d:'왼손만 머리 위로 올리세요',             k:'raise_left'},
+  {n:'팔 벌려!',     d:'양팔을 어깨 높이로 옆으로 쭉 펴세요',   k:'arms_wide'},
+  {n:'차렷!',         d:'팔을 몸 옆에 붙이고 똑바로 서세요',     k:'attention'},
+  {n:'인사!',         d:'상체를 앞으로 45도 이상 숙이세요',      k:'bow'},
+  {n:'양손 허리!',   d:'양손을 허리에 올리세요',                k:'hands_hip'},
+  {n:'나비포옹!',     d:'양팔을 가슴 앞에서 교차하세요',         k:'cross_arms'},
+  {n:'오른손 허리!',  d:'오른손만 허리에 올리세요',               k:'right_hip'},
+  {n:'왼손 허리!',   d:'왼손만 허리에 올리세요',                k:'left_hip'},
+  {n:'V자 팔!',      d:'양팔을 머리 위로 V자 모양으로 올리세요', k:'v_arms'},
+  {n:'볼 감싸!',     d:'양손을 귀 옆 얼굴 높이로 올리세요',     k:'cheek_frame'},
+  {n:'오른발 올려!',  d:'오른쪽 무릎을 허리 높이로 올리세요',    k:'right_knee'},
+  {n:'왼발 올려!',   d:'왼쪽 무릎을 허리 높이로 올리세요',      k:'left_knee'},
+  {n:'양손 머리!',   d:'양손을 머리 양옆에 넓게 올리세요',       k:'hands_head_wide'},
+  {n:'오른손 나란히!', d:'오른팔을 어깨 높이로 옆으로 쭉 뻗으세요', k:'right_forward'},
+  {n:'왼손 나란히!',  d:'왼팔을 어깨 높이로 옆으로 쭉 뻗으세요',  k:'left_forward'},
+  {n:'하늘 찌르기!', d:'오른손을 머리 위로 높이 올리세요',       k:'sky_point'},
+  {n:'옆으로 기울기!', d:'상체를 옆으로 기울이세요',              k:'lean_side'},
+  {n:'양손 위 박수!', d:'머리 위에서 양손을 가까이 모으세요',    k:'clap_above'},
+];
+
+const DUR = 300;
 let ch, role='', myId='', myName='', room='';
 let players={}, lb=[];
 let score=0, combo=1, cnt=0, cur=MISS[0];
@@ -382,11 +241,10 @@ if(p.get('room'))$('icode').value=p.get('room').toUpperCase();
 $('btn-teacher').addEventListener('click', goTeacher);
 $('btn-student').addEventListener('click', goStudent);
 $('tsbtn').addEventListener('click', tStart);
-$('btn-next').addEventListener('click',  ()=>{ closeJudge(); pickM(); });
-$('btn-retry').addEventListener('click', ()=>{ closeJudge(); });
-$('btn-pass').addEventListener('click',  ()=>{ combo=1; $('scb').textContent='x1'; closeJudge(); pickM(); });
+$('btn-next').addEventListener('click',  ()=>{closeJudge();pickM();});
+$('btn-retry').addEventListener('click', ()=>{closeJudge();});
+$('btn-pass').addEventListener('click',  ()=>{combo=1;$('scb').textContent='x1';closeJudge();pickM();});
 
-// ── 판정 ──
 function closeJudge(){
   judging=false; holdStart=null;
   $('judge-panel').style.display='none';
@@ -405,9 +263,9 @@ function showJudge(correct){
     combo=Math.min(combo+1,5);
     $('ssc').textContent=score;
     $('scb').textContent='x'+combo;
-    $('judge-msg').innerHTML=`✅ 정확해요!&nbsp;<span style="color:var(--g)">+${pts}점</span>${combo>1?' 🔥 '+combo+'콤보!':''}`;
+    $('judge-msg').innerHTML='✅ 정확해요!&nbsp;<span style="color:var(--g)">+'+pts+'점</span>'+(combo>1?' 🔥 '+combo+'콤보!':'');
     ch.send({type:'broadcast',event:'student',payload:{t:'score',id:myId,score,combo,cnt}});
-    setTimeout(()=>{ closeJudge(); pickM(); }, 1500);
+    setTimeout(()=>{closeJudge();pickM();},1500);
   } else {
     combo=1; $('scb').textContent='x1';
     $('judge-msg').innerHTML='❌ 동작이 달라요!<br><span style="font-size:13px;color:var(--mu)">다시 해보거나 다음으로 넘어가세요</span>';
@@ -435,16 +293,13 @@ async function goTeacher(){
     }
   });
 
-  try {
-    await Promise.race([
-      new Promise(res=>ch.subscribe(s=>{ if(s==='SUBSCRIBED') res(); })),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('연결 시간 초과')),8000))
-    ]);
-  } catch(e) {
-    msg('연결 실패: '+e.message+' — 새로고침 후 다시 시도해 주세요.');
-    return;
+  let ok=false;
+  ch.subscribe(s=>{console.log('sub:',s);if(s==='SUBSCRIBED')ok=true;});
+  for(let i=0;i<100;i++){
+    await new Promise(r=>setTimeout(r,100));
+    if(ok)break;
   }
-
+  if(!ok){msg('연결 실패! 새로고침 후 다시 시도해 주세요.','var(--r)');return;}
   msg('');
   show('teacher');
   $('tbadge').textContent=room;
@@ -486,11 +341,7 @@ function tStart(){
     $('ttimer').style.color=c;
     $('tbar').style.width=pct+'%';
     $('tbar').style.background=c;
-    if(s<=0){
-      clearInterval(timer);
-      ch.send({type:'broadcast',event:'teacher',payload:{t:'end',players}});
-      showResult();
-    }
+    if(s<=0){clearInterval(timer);ch.send({type:'broadcast',event:'teacher',payload:{t:'end',players}});showResult();}
   },100);
 }
 
@@ -502,6 +353,7 @@ async function goStudent(){
   myName=name; room=code; role='student';
   myId='s'+Date.now()+Math.random().toString(36).slice(2,5);
   msg('연결 중...','var(--g)');
+
   ch=sb.channel('room-'+code,{config:{broadcast:{self:false}}});
   ch.on('broadcast',{event:'teacher'},({payload})=>{
     if(payload.t==='start') startGame();
@@ -510,15 +362,14 @@ async function goStudent(){
       showResult();
     }
   });
-  try {
-    await Promise.race([
-      new Promise(res=>ch.subscribe(s=>{ if(s==='SUBSCRIBED') res(); })),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('연결 시간 초과')),8000))
-    ]);
-  } catch(e) {
-    msg('연결 실패: '+e.message+' — 새로고침 후 다시 시도해 주세요.');
-    return;
+
+  let ok=false;
+  ch.subscribe(s=>{if(s==='SUBSCRIBED')ok=true;});
+  for(let i=0;i<100;i++){
+    await new Promise(r=>setTimeout(r,100));
+    if(ok)break;
   }
+  if(!ok){msg('연결 실패! 방 코드를 확인해 주세요.','var(--r)');return;}
   ch.send({type:'broadcast',event:'student',payload:{t:'join',id:myId,name}});
   msg('');
   show('student');
@@ -527,7 +378,7 @@ async function goStudent(){
 }
 
 function startGame(){
-  score=0; combo=1; cnt=0;
+  score=0;combo=1;cnt=0;
   $('swait').style.display='none';
   $('sgame').style.display='block';
   pickM();
@@ -549,13 +400,12 @@ function pickM(){
   let m;
   do{m=MISS[Math.floor(Math.random()*MISS.length)];}while(m===cur&&MISS.length>1);
   cur=m;
-  $('ssvg').innerHTML = POSES[m.k] || `<span style="font-size:48px">${m.e}</span>`;
+  $('ssvg').innerHTML=POSES[m.k]||'';
   $('smn').textContent=m.n;
   $('smd').textContent=m.d;
   holdStart=null;
 }
 
-// ── 결과 ──
 function showResult(){
   clearInterval(timer);
   if(pose){try{pose.close();}catch{}}
@@ -565,20 +415,14 @@ function showResult(){
   const t3=lb.slice(0,3);
   const ord=[t3[1],t3[0],t3[2]];
   const hs=[100,130,80],cs=['#B4B2A9','#EF9F27','#9FE1CB'],ms=['🥈','🥇','🥉'];
-  $('rpod').innerHTML=ord.map((p,i)=>p?`
-    <div class="pi">
-      <div class="pn">${p.name}</div>
-      <div class="ps">${p.score}점</div>
-      <div class="pb" style="height:${hs[i]}px;background:${cs[i]}">${ms[i]}</div>
-    </div>`:`<div class="pi"></div>`).join('');
-  $('rlb').innerHTML=lb.map((p,i)=>`
-    <div class="fr ${p.id===myId?'me2':''}">
-      <span>${ri(i)} ${p.name}${p.id===myId?' (나)':''}</span>
-      <span style="font-weight:500;color:var(--g)">${p.score}점</span>
-    </div>`).join('');
+  $('rpod').innerHTML=ord.map((p,i)=>p?
+    '<div class="pi"><div class="pn">'+p.name+'</div><div class="ps">'+p.score+'점</div><div class="pb" style="height:'+hs[i]+'px;background:'+cs[i]+'">'+ms[i]+'</div></div>'
+    :'<div class="pi"></div>').join('');
+  $('rlb').innerHTML=lb.map((p,i)=>
+    '<div class="fr '+(p.id===myId?'me2':'')+'"><span>'+ri(i)+' '+p.name+(p.id===myId?' (나)':'')+'</span><span style="font-weight:500;color:var(--g)">'+p.score+'점</span></div>'
+  ).join('');
 }
 
-// ── 카메라 ──
 async function setupCam(){
   try{
     const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
@@ -590,155 +434,70 @@ async function setupCam(){
 
 function loadPose(){
   const tryLoad=()=>{
-    if(!window.Pose){
-      $('scs').textContent='AI 로딩 중...';
-      setTimeout(tryLoad, 500);
-      return;
-    }
-    $('scs').textContent='AI 초기화 중...';
-    pose=new window.Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`});
+    if(!window.Pose){setTimeout(tryLoad,500);return;}
+    pose=new window.Pose({locateFile:f=>'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/'+f});
     pose.setOptions({modelComplexity:0,smoothLandmarks:true,minDetectionConfidence:.5,minTrackingConfidence:.5});
     pose.onResults(onPose);
     pose.initialize().then(()=>{
-      $('scs').textContent='준비 완료! 동작을 따라 하세요';
+      $('scs').textContent='준비 완료!';
       const v=$('svid'),c=$('scan');
       async function det(){
         if(!pose)return;
-        c.width=v.videoWidth||320; c.height=v.videoHeight||240;
-        try{ await pose.send({image:v}); }catch{}
+        c.width=v.videoWidth||320;c.height=v.videoHeight||240;
+        try{await pose.send({image:v});}catch{}
         requestAnimationFrame(det);
       }
-      if(v.readyState>=2) requestAnimationFrame(det);
+      if(v.readyState>=2)requestAnimationFrame(det);
       else v.onloadeddata=()=>requestAnimationFrame(det);
-    }).catch(e=>{
-      console.error('Pose init error:',e);
-      $('scs').textContent='AI 인식 실패 - 새로고침 해주세요';
-    });
+    }).catch(()=>{$('scs').textContent='인식 불가';});
   };
   tryLoad();
 }
 
-// ── 포즈 판별 ──
 function onPose(res){
-  if(!res.poseLandmarks){
-    $('pose-status').textContent='사람을 인식 못 했어요. 카메라에서 조금 멀리 서세요.';
-    $('pose-status').style.color='var(--r)';
-    return;
-  }
-  if(judging) return;
-
+  if(!res.poseLandmarks||judging)return;
   const L=res.poseLandmarks;
-  // MediaPipe: y는 위=0, 아래=1 / 카메라 좌우반전이므로 left/right 그대로 사용
-  const nose=L[0];
-  const lShoulder=L[11], rShoulder=L[12];
-  const lElbow=L[13],    rElbow=L[14];
-  const lWrist=L[15],    rWrist=L[16];
-  const lHip=L[23],      rHip=L[24];
+  const nose=L[0],lw=L[15],rw=L[16],ls=L[11],rs=L[12],lh=L[23],rh=L[24];
+  const shW=Math.abs(ls.x-rs.x)||0.15;
+  const shMidY=(ls.y+rs.y)/2;
+  const hipMidY=(lh.y+rh.y)/2;
+  const bodyH=hipMidY-shMidY;
+  let hit=false;
+  const k=cur.k;
 
-  // 어깨 너비 기준값 (신체 스케일 기준)
-  const shW = Math.abs(lShoulder.x - rShoulder.x) || 0.15;
-  const shMidY = (lShoulder.y + rShoulder.y) / 2;
-  const hipMidY = (lHip.y + rHip.y) / 2;
-  const bodyH = hipMidY - shMidY; // 어깨~엉덩이 높이
+  if(k==='raise_both')        hit=lw.y<nose.y&&rw.y<nose.y;
+  else if(k==='raise_right')  hit=rw.y<nose.y&&lw.y>ls.y;
+  else if(k==='raise_left')   hit=lw.y<nose.y&&rw.y>rs.y;
+  else if(k==='arms_wide')    hit=Math.abs(lw.x-rw.x)>shW*1.8&&Math.abs(lw.y-ls.y)<shW*0.5&&Math.abs(rw.y-rs.y)<shW*0.5;
+  else if(k==='attention')    hit=Math.abs(lw.x-lh.x)<shW*0.4&&Math.abs(lw.y-lh.y)<shW*0.5&&Math.abs(rw.x-rh.x)<shW*0.4&&Math.abs(rw.y-rh.y)<shW*0.5;
+  else if(k==='bow')          hit=nose.y>shMidY||( lw.y>nose.y+bodyH*0.2&&rw.y>nose.y+bodyH*0.2);
+  else if(k==='hands_hip')    hit=Math.abs(lw.y-lh.y)<bodyH*0.3&&Math.abs(rw.y-rh.y)<bodyH*0.3;
+  else if(k==='cross_arms')   hit=lw.y>ls.y&&lw.y<hipMidY&&rw.y>rs.y&&rw.y<hipMidY&&lw.x>rs.x&&rw.x<ls.x;
+  else if(k==='right_hip')    hit=Math.abs(rw.y-rh.y)<bodyH*0.3&&Math.abs(lw.y-lh.y)>bodyH*0.35;
+  else if(k==='left_hip')     hit=Math.abs(lw.y-lh.y)<bodyH*0.3&&Math.abs(rw.y-rh.y)>bodyH*0.35;
+  else if(k==='v_arms')       hit=lw.y<nose.y&&rw.y<nose.y&&Math.abs(lw.x-rw.x)>shW*1.2;
+  else if(k==='cheek_frame')  hit=lw.y>nose.y&&lw.y<ls.y&&rw.y>nose.y&&rw.y<rs.y&&Math.abs(lw.x-ls.x)<shW*0.6&&Math.abs(rw.x-rs.x)<shW*0.6;
+  else if(k==='right_knee')   {const rk=L[26];hit=rk&&rk.y<rh.y-bodyH*0.1;}
+  else if(k==='left_knee')    {const lk=L[25];hit=lk&&lk.y<lh.y-bodyH*0.1;}
+  else if(k==='hands_head_wide') hit=lw.y<ls.y&&lw.y>nose.y*0.8&&rw.y<rs.y&&rw.y>nose.y*0.8&&Math.abs(lw.x-rw.x)>shW*1.3;
+  else if(k==='right_forward') hit=Math.abs(rw.y-rs.y)<shW*0.4&&rw.x>rs.x+shW*0.4&&lw.y>ls.y;
+  else if(k==='left_forward')  hit=Math.abs(lw.y-ls.y)<shW*0.4&&lw.x<ls.x-shW*0.4&&rw.y>rs.y;
+  else if(k==='sky_point')    hit=rw.y<nose.y&&lw.y>ls.y;
+  else if(k==='lean_side')    {const le=Math.min(ls.x,rs.x)-shW*0.3,re=Math.max(ls.x,rs.x)+shW*0.3;hit=nose.x<le||nose.x>re;}
+  else if(k==='clap_above')   hit=lw.y<nose.y&&rw.y<nose.y&&Math.abs(lw.x-rw.x)<shW*0.4;
 
-  let hit = false;
-  const k = cur.k;
-
-  if(k === 'raise_both'){
-    // 양손이 코보다 위 (y값이 더 작음)
-    hit = lWrist.y < nose.y && rWrist.y < nose.y;
-
-  } else if(k === 'raise_right'){
-    // 오른손이 코보다 위, 왼손은 어깨보다 아래
-    hit = rWrist.y < nose.y && lWrist.y > lShoulder.y;
-
-  } else if(k === 'raise_left'){
-    // 왼손이 코보다 위, 오른손은 어깨보다 아래
-    hit = lWrist.y < nose.y && rWrist.y > rShoulder.y;
-
-  } else if(k === 'arms_wide'){
-    // 양손이 어깨보다 넓게 벌어지고, 손 높이가 어깨와 비슷
-    const spread = Math.abs(lWrist.x - rWrist.x);
-    const lLevel = Math.abs(lWrist.y - lShoulder.y);
-    const rLevel = Math.abs(rWrist.y - rShoulder.y);
-    hit = spread > shW * 1.8 && lLevel < shW * 0.6 && rLevel < shW * 0.6;
-
-  } else if(k === 'attention'){
-    // 양손이 허벅지 옆 (엉덩이 근처, 몸 가까이)
-    const lOk = Math.abs(lWrist.y - lHip.y) < bodyH * 0.4 && Math.abs(lWrist.x - lHip.x) < shW * 0.5;
-    const rOk = Math.abs(rWrist.y - rHip.y) < bodyH * 0.4 && Math.abs(rWrist.x - rHip.x) < shW * 0.5;
-    hit = lOk && rOk;
-
-  } else if(k === 'bow'){
-    // 코가 어깨 높이 근처로 내려오면 인정 (기준 완화)
-    hit = nose.y > shMidY || (lWrist.y > nose.y + bodyH*0.2 && rWrist.y > nose.y + bodyH*0.2);
-
-  } else if(k === 'hands_hip'){
-    // 양손이 엉덩이 높이에 있음
-    const lOk = Math.abs(lWrist.y - lHip.y) < bodyH * 0.3;
-    const rOk = Math.abs(rWrist.y - rHip.y) < bodyH * 0.3;
-    hit = lOk && rOk;
-
-  } else if(k === 'cross_arms'){
-    // 양손이 가슴 앞에서 교차 (x좌표가 반대편 어깨를 넘어감)
-    const lInChest = lWrist.y > lShoulder.y && lWrist.y < hipMidY;
-    const rInChest = rWrist.y > rShoulder.y && rWrist.y < hipMidY;
-    const crossed  = lWrist.x > rShoulder.x && rWrist.x < lShoulder.x;
-    hit = lInChest && rInChest && crossed;
-
-  } else if(k === 'right_hip'){
-    // 오른손만 엉덩이 높이, 왼손은 다른 위치
-    const rOk = Math.abs(rWrist.y - rHip.y) < bodyH * 0.3;
-    const lNotHip = Math.abs(lWrist.y - lHip.y) > bodyH * 0.35;
-    hit = rOk && lNotHip;
-
-  } else if(k === 'v_arms'){
-    // 양손이 코 위, 손 간격이 어깨너비보다 넓게 (V자)
-    const bothUp = lWrist.y < nose.y && rWrist.y < nose.y;
-    const spread = Math.abs(lWrist.x - rWrist.x) > shW * 1.2;
-    hit = bothUp && spread;
-
-  } else if(k === 'heart_arms'){
-    // 양손이 코 위, 손 간격이 좁게 모임 (하트)
-    const bothUp = lWrist.y < nose.y && rWrist.y < nose.y;
-    const close  = Math.abs(lWrist.x - rWrist.x) < shW * 0.5;
-    hit = bothUp && close;
-
-  } else if(k === 'cheek_frame'){
-    // 양손이 귀 옆 얼굴 높이 (코와 어깨 사이)
-    const lFace = lWrist.y > nose.y && lWrist.y < lShoulder.y;
-    const rFace = rWrist.y > nose.y && rWrist.y < rShoulder.y;
-    const lSide = Math.abs(lWrist.x - lShoulder.x) < shW * 0.6;
-    const rSide = Math.abs(rWrist.x - rShoulder.x) < shW * 0.6;
-    hit = lFace && rFace && lSide && rSide;
-
-  } else if(k === 'right_knee'){
-    // 오른쪽 무릎이 엉덩이보다 위로 올라옴
-    const rKnee = L[26];
-    hit = rKnee && rKnee.y < rHip.y - bodyH * 0.1;
-
-  } else if(k === 'run_pose'){
-    // 한 손은 앞(몸 중심 앞쪽), 한 손은 뒤(몸 중심 뒤쪽) — 팔이 앞뒤로 엇갈림
-    const midX = (lShoulder.x + rShoulder.x) / 2;
-    const lFwd = lWrist.y < shMidY && lWrist.y > nose.y;
-    const rFwd = rWrist.y < shMidY && rWrist.y > nose.y;
-    const lBwd = lWrist.y > hipMidY;
-    const rBwd = rWrist.y > hipMidY;
-    hit = (lFwd && rBwd) || (rFwd && lBwd);
-  }
-
-  const ps = $('pose-status');
+  const ps=$('pose-status');
   if(hit){
-    if(!holdStart) holdStart = Date.now();
-    const held = Date.now() - holdStart;
-    const pct  = Math.min(100, Math.round(held / HOLD_MS * 100));
-    ps.textContent = `✅ 동작 유지 중... ${pct}%`;
-    ps.style.color  = 'var(--g)';
-    if(held >= HOLD_MS) showJudge(true);
+    if(!holdStart)holdStart=Date.now();
+    const held=Date.now()-holdStart;
+    const pct=Math.min(100,Math.round(held/HOLD_MS*100));
+    ps.textContent='✅ 동작 유지 중... '+pct+'%';
+    ps.style.color='var(--g)';
+    if(held>=HOLD_MS)showJudge(true);
   } else {
-    holdStart = null;
-    ps.textContent = '동작을 따라 하세요!';
-    ps.style.color  = 'var(--mu)';
+    holdStart=null;
+    ps.textContent='동작을 따라 하세요!';
+    ps.style.color='var(--mu)';
   }
 }
 </script>
