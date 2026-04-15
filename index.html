@@ -41,18 +41,20 @@ input:focus{border-color:var(--g);}
 .lbw{height:5px;background:#eee;border-radius:3px;margin-top:3px;}
 .lbb{height:100%;border-radius:3px;background:var(--g);transition:width .5s;}
 .lsc{font-size:17px;font-weight:500;color:var(--g);}
-#student{padding:.75rem;max-width:480px;margin:0 auto;}
-.hud{display:flex;justify-content:space-between;padding:8px 12px;background:var(--card);border:0.5px solid var(--bd);border-radius:var(--ra);margin-bottom:8px;}
-.hi{text-align:center;}.hl{font-size:11px;color:var(--mu);}.hv{font-size:20px;font-weight:500;}
-.mb{text-align:center;padding:1rem;background:var(--card);border:0.5px solid var(--bd);border-radius:var(--ra);margin-bottom:10px;}
-.mn{font-size:22px;font-weight:500;margin-bottom:4px;}.md{font-size:13px;color:var(--mu);}
-.cw{position:relative;width:100%;margin:0 auto 10px;border-radius:var(--ra);overflow:hidden;border:0.5px solid var(--bd);background:#000;aspect-ratio:3/4;}
+#student{padding:0;max-width:100%;margin:0;width:100%;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.hud{display:flex;justify-content:space-between;padding:6px 12px;background:var(--card);border:none;border-bottom:0.5px solid var(--bd);border-radius:0;margin-bottom:0;flex-shrink:0;}
+.hi{text-align:center;}.hl{font-size:12px;color:var(--mu);}.hv{font-size:22px;font-weight:500;}
+.bw{height:6px;background:#eee;border-radius:0;overflow:hidden;margin-bottom:0;flex-shrink:0;}
+.mb{text-align:center;padding:0.5rem;background:var(--card);border:none;border-bottom:0.5px solid var(--bd);border-radius:0;margin-bottom:0;flex-shrink:0;height:30vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.mn{font-size:28px;font-weight:500;margin-bottom:4px;}.md{font-size:16px;color:var(--mu);}
+.cw{position:relative;width:100%;flex:1;border-radius:0;overflow:hidden;border:none;background:#000;aspect-ratio:unset;}
 .cw video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 .cw canvas{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
-.cs{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:3px 10px;border-radius:99px;white-space:nowrap;}
-.fb{text-align:center;font-size:22px;font-weight:500;min-height:32px;transition:opacity .3s;}
-.wb{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:10px;}
-.wb .em{font-size:64px;}.wb h2{font-size:22px;font-weight:500;}.wb p{font-size:14px;color:var(--mu);}
+.cs{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:13px;padding:4px 12px;border-radius:99px;white-space:nowrap;}
+#pose-status{font-size:16px;padding:6px 12px;flex-shrink:0;background:var(--card);border-top:0.5px solid var(--bd);text-align:center;}
+#btn-pass-wrap{flex-shrink:0;background:var(--card);padding:4px 12px;text-align:right;border-top:0.5px solid var(--bd);}
+#judge-panel{flex-shrink:0;background:var(--card);padding:10px 12px;border-top:0.5px solid var(--bd);}
+#judge-msg{font-size:22px;font-weight:500;margin-bottom:10px;line-height:1.4;}
 #result{display:none;position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;padding:2rem 1rem;}
 .ri{max-width:480px;margin:0 auto;text-align:center;}
 .pod{display:flex;justify-content:center;align-items:flex-end;gap:8px;margin:1rem 0 1.5rem;}
@@ -115,55 +117,51 @@ input:focus{border-color:var(--g);}
     <p id="swname"></p>
     <p id="sstat" style="color:var(--g);font-size:13px">연결 중...</p>
   </div>
-  <div id="sgame" style="display:none">
+  <div id="sgame" style="display:flex;flex-direction:column;height:100vh;overflow:hidden;">
     <div class="hud">
       <div class="hi"><div class="hl">점수</div><div class="hv" id="ssc">0</div></div>
       <div class="hi"><div class="hl">시간</div><div class="hv" id="stm" style="color:var(--g)">5:00</div></div>
       <div class="hi"><div class="hl">콤보</div><div class="hv" id="scb">x1</div></div>
     </div>
-    <div class="bw" style="margin-bottom:10px"><div class="bb" id="sbar" style="width:100%;background:var(--g)"></div></div>
+    <div class="bw"><div class="bb" id="sbar" style="width:100%;background:var(--g)"></div></div>
+
+    <!-- 동작 가이드 30% -->
     <div class="mb">
-      <div id="ssvg" style="width:100px;height:120px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;"></div>
+      <div id="ssvg" style="height:100px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;"></div>
       <div class="mn" id="smn">만세!</div>
       <div class="md" id="smd">양손을 머리 위로 올리세요</div>
     </div>
+
+    <!-- 카메라 70% -->
     <div class="cw">
       <video id="svid" autoplay playsinline muted></video>
       <canvas id="scan"></canvas>
-      <!-- 신체 가이드 오버레이 -->
       <svg id="guide-svg" viewBox="0 0 100 133" preserveAspectRatio="xMidYMid meet"
         style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0.25;transition:opacity .5s">
-        <!-- 머리 -->
         <circle cx="50" cy="10" r="8" fill="none" stroke="white" stroke-width="1.5"/>
-        <!-- 몸통 -->
         <line x1="50" y1="18" x2="50" y2="65" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <!-- 왼팔 -->
         <line x1="50" y1="28" x2="30" y2="50" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <!-- 오른팔 -->
         <line x1="50" y1="28" x2="70" y2="50" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <!-- 왼다리 -->
         <line x1="50" y1="65" x2="38" y2="100" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
         <line x1="38" y1="100" x2="35" y2="130" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <!-- 오른다리 -->
         <line x1="50" y1="65" x2="62" y2="100" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
         <line x1="62" y1="100" x2="65" y2="130" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
-      <!-- 가이드 문구 -->
-      <div id="guide-msg" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.55);color:#fff;font-size:12px;padding:3px 10px;border-radius:99px;white-space:nowrap;transition:opacity .5s">전신이 화면 안에 들어오도록 서세요</div>
+      <div id="guide-msg" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;font-size:14px;padding:5px 14px;border-radius:99px;white-space:nowrap;transition:opacity .5s">전신이 화면 안에 들어오도록 서세요</div>
       <div class="cs" id="scs">카메라 준비 중...</div>
     </div>
-    <div id="pose-status" style="text-align:center;padding:8px;font-size:14px;color:var(--mu);margin-bottom:6px">동작을 따라 하세요!</div>
-    <div style="text-align:right;margin-bottom:6px">
-      <button class="btn out" id="btn-pass" style="width:auto;padding:6px 16px;margin:0;font-size:13px">패스 ⏭</button>
+
+    <div id="pose-status" style="color:var(--mu)">동작을 따라 하세요!</div>
+    <div id="btn-pass-wrap">
+      <button class="btn out" id="btn-pass" style="width:auto;padding:6px 18px;margin:0;font-size:14px">패스 ⏭</button>
     </div>
-    <div id="judge-panel" style="display:none;text-align:center;margin-bottom:10px">
-      <div id="judge-msg" style="font-size:20px;font-weight:500;margin-bottom:12px;line-height:1.5"></div>
+    <div id="judge-panel" style="display:none">
+      <div id="judge-msg"></div>
       <div style="display:flex;gap:8px">
         <button class="btn green" id="btn-next" style="flex:1;margin:0">다음 동작 →</button>
         <button class="btn out" id="btn-retry" style="flex:1;margin:0">다시 할게요 🔄</button>
       </div>
     </div>
-    <div class="fb" id="sfb"></div>
   </div>
 </div>
 
@@ -400,7 +398,7 @@ async function goStudent(){
 function startGame(){
   score=0;combo=1;cnt=0;
   $('swait').style.display='none';
-  $('sgame').style.display='block';
+  $('sgame').style.display='flex';
   pickM();
   setupCam();
   let s=DUR;
