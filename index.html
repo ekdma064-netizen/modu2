@@ -230,7 +230,7 @@ const MISS = [
   {n:'오른손 허리!',  d:'오른손만 허리에 올리세요',               k:'right_hip'},
   {n:'왼손 허리!',   d:'왼손만 허리에 올리세요',                k:'left_hip'},
   {n:'V자 팔!',      d:'양팔을 머리 위로 V자 모양으로 올리세요', k:'v_arms'},
-  {n:'볼 감싸!',     d:'양손을 귀 옆 얼굴 높이로 올리세요',     k:'cheek_frame'},
+  {n:'볼하트!',     d:'양손으로 양 볼을 감싸고 하트를 만드세요',     k:'cheek_frame'},
   {n:'오른발 올려!',  d:'오른쪽 무릎을 허리 높이로 올리세요',    k:'right_knee'},
   {n:'왼발 올려!',   d:'왼쪽 무릎을 허리 높이로 올리세요',      k:'left_knee'},
   {n:'양손 머리!',   d:'양손을 머리 양옆에 넓게 올리세요',       k:'hands_head_wide'},
@@ -542,8 +542,8 @@ function onPose(res){
   else if(k==='right_knee')   {const rk=L[27];hit=rk&&rk.y<rh.y-bodyH*0.1;}
   else if(k==='left_knee')    {const lk=L[28];hit=lk&&lk.y<lh.y-bodyH*0.1;}
   else if(k==='hands_head_wide') hit=lw.y<ls.y&&lw.y>nose.y*0.8&&rw.y<rs.y&&rw.y>nose.y*0.8&&Math.abs(lw.x-rw.x)>shW*1.3;
-  else if(k==='right_forward') hit=Math.abs(rw.y-rs.y)<shW*0.4&&rw.x<rs.x-shW*0.4&&lw.y>ls.y;
-  else if(k==='left_forward')  hit=Math.abs(lw.y-ls.y)<shW*0.4&&lw.x>ls.x+shW*0.4&&rw.y>rs.y;
+  else if(k==='right_forward') hit=Math.abs(rw.y-rs.y)<shW*0.5&&rw.x>rs.x+shW*0.3&&lw.y>ls.y;
+  else if(k==='left_forward')  hit=Math.abs(lw.y-ls.y)<shW*0.5&&lw.x<ls.x-shW*0.3&&rw.y>rs.y;
   else if(k==='sky_point')    hit=rw.y<nose.y&&lw.y>ls.y;
   else if(k==='lean_side')    {const le=Math.min(ls.x,rs.x)-shW*0.3,re=Math.max(ls.x,rs.x)+shW*0.3;hit=nose.x<le||nose.x>re;}
   else if(k==='clap_above')   hit=lw.y<nose.y&&rw.y<nose.y&&Math.abs(lw.x-rw.x)<shW*0.4;
