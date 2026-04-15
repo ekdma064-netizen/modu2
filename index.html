@@ -495,17 +495,20 @@ function onPose(res){
   const ls=L[12], rs=L[11]; // 화면상 왼어깨=MediaPipe 오른어깨
   const lh=L[24], rh=L[23]; // 화면상 왼엉덩이=MediaPipe 오른엉덩이
 
-  // 전신 확인: 코, 양어깨, 양발목이 모두 화면 안에 있는지
-  const keyPoints=[nose,ls,rs,lh,rh,lAnkle,rAnkle];
-  const allIn = keyPoints.every(pt=>pt && pt.x>0.05 && pt.x<0.95 && pt.y>0.05 && pt.y<0.95);
-  const anklesIn = lAnkle && rAnkle && lAnkle.y < 0.95 && rAnkle.y < 0.95;
+  // 전신 확인: 핵심 관절만 체크 (발목은 선택적)
+  const keyPoints=[nose,ls,rs,lh,rh];
+  const allIn = keyPoints.every(pt=>pt && pt.x>0.03 && pt.x<0.97 && pt.y>0.03 && pt.y<0.97);
+  const hipOk = lh && rh && lh.y < 0.92 && rh.y < 0.92;
+  // 발목은 있으면 확인, 없어도 엉덩이까지 보이면 통과
+  const ankleOk = (lAnkle && rAnkle)
+    ? (lAnkle.y < 0.97 && rAnkle.y < 0.97)
+    : hipOk;
 
-  if(!allIn || !anklesIn){
-    // 가이드 표시
+  if(!allIn || !hipOk){
     guideSvg.style.opacity='0.3';
     guideMsg.style.opacity='1';
-    if(!anklesIn) guideMsg.textContent='발이 보이도록 뒤로 물러서세요';
-    else if(nose.y < 0.05) guideMsg.textContent='아래로 내려가세요';
+    if(nose && nose.y < 0.05) guideMsg.textContent='아래로 내려가세요';
+    else if(!hipOk) guideMsg.textContent='뒤로 물러서서 전신을 보여주세요';
     else guideMsg.textContent='전신이 화면 안에 들어오도록 서세요';
     if(!judging){
       $('pose-status').textContent='📏 위치를 맞춰주세요!';
@@ -514,9 +517,14 @@ function onPose(res){
     return;
   }
 
-  // 전신이 잘 들어오면 가이드 숨김
-  guideSvg.style.opacity='0';
-  guideMsg.style.opacity='0';
+  if(!ankleOk){
+    guideMsg.style.opacity='1';
+    guideMsg.textContent='발이 보이도록 뒤로 조금 물러서세요';
+    guideSvg.style.opacity='0.15';
+  } else {
+    guideSvg.style.opacity='0';
+    guideMsg.style.opacity='0';
+  }
 
   if(judging)return;
 
