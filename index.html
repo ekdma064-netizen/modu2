@@ -47,7 +47,7 @@ input:focus{border-color:var(--g);}
 .bw{height:6px;background:#eee;border-radius:0;overflow:hidden;margin-bottom:0;flex-shrink:0;}
 .mb{text-align:center;padding:0.5rem;background:var(--card);border:none;border-bottom:0.5px solid var(--bd);border-radius:0;margin-bottom:0;flex-shrink:0;height:30vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .mn{font-size:28px;font-weight:500;margin-bottom:4px;}.md{font-size:16px;color:var(--mu);}
-.cw{position:relative;width:100%;flex:1;border-radius:0;overflow:hidden;border:none;background:#000;aspect-ratio:unset;}
+.cw{position:relative;width:100%;flex:1;border-radius:0;overflow:hidden;border:none;background:#000;aspect-ratio:3/4;max-height:70vh;}
 .cw video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 .cw canvas{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
 .cs{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:13px;padding:4px 12px;border-radius:99px;white-space:nowrap;}
@@ -127,7 +127,16 @@ input:focus{border-color:var(--g);}
 
     <!-- 동작 가이드 30% -->
     <div class="mb">
-      <div id="ssvg" style="height:100px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;"></div>
+      <div id="ssvg" style="height:110px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;">
+        <svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:110px">
+          <circle cx="40" cy="12" r="10" fill="#1D9E75"/>
+          <line x1="40" y1="22" x2="40" y2="70" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+          <line x1="40" y1="35" x2="10" y2="8" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+          <line x1="40" y1="35" x2="70" y2="8" stroke="#1D9E75" stroke-width="4" stroke-linecap="round"/>
+          <line x1="40" y1="70" x2="27" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+          <line x1="40" y1="70" x2="53" y2="110" stroke="#1D9E75" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div class="mn" id="smn">만세!</div>
       <div class="md" id="smd">양손을 머리 위로 올리세요</div>
     </div>
@@ -418,7 +427,8 @@ function pickM(){
   let m;
   do{m=MISS[Math.floor(Math.random()*MISS.length)];}while(m===cur&&MISS.length>1);
   cur=m;
-  $('ssvg').innerHTML=POSES[m.k]||'';
+  const svg = POSES[m.k] || POSES['raise_both'];
+  $('ssvg').innerHTML = '<svg viewBox="' + svg.match(/viewBox="([^"]+)"/)[1] + '" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:110px">' + svg.replace(/<svg[^>]*>/,'').replace('</svg>','') + '</svg>';
   $('smn').textContent=m.n;
   $('smd').textContent=m.d;
   holdStart=null;
