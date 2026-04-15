@@ -289,7 +289,10 @@ let timer=null,pose=null;
 const $=id=>document.getElementById(id);
 const ri=i=>['🥇','🥈','🥉'][i]??(i+1)+'위';
 const fmt=s=>Math.floor(s/60)+':'+String(Math.ceil(s%60)).padStart(2,'0');
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');}
+function show(id){
+  document.querySelectorAll('.screen, #student').forEach(s=>s.classList.remove('on'));
+  $(id).classList.add('on');
+}
 function msg(t,c='var(--r)'){$('emsg').textContent=t;$('emsg').style.color=c;}
 
 const p=new URLSearchParams(location.search);
