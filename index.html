@@ -389,24 +389,47 @@ async function goStudent(){
   if(!name||!code){msg('이름과 방 코드를 입력해 주세요!');return;}
   myName=name;room=code;role='student';
   myId='s'+Date.now()+Math.random().toString(36).slice(2,5);
-  msg('연결 중...','var(--g)');
-  ch=sb.channel('room-'+code,{config:{broadcast:{self:false}}});
-  ch.on('broadcast',{event:'teacher'},({payload})=>{
-    if(payload.t==='start')startGame();
-    if(payload.t==='end'){
-      lb=Object.entries(payload.players||{}).map(([id,v])=>({id,...v})).sort((a,b)=>b.score-a.score);
-      showResult();
+
+  msg('1단계: Supabase 연결 중...','var(--g)');
+  await new Promise(r=>setTimeout(r,100));
+
+  try{
+    ch=sb.channel('room-'+code,{config:{broadcast:{self:false}}});
+    ch.on('broadcast',{event:'teacher'},({payload})=>{
+      if(payload.t==='start')startGame();
+      if(payload.t==='end'){
+        lb=Object.entries(payload.players||{}).map(([id,v])=>({id,...v})).sort((a,b)=>b.score-a.score);
+        showResult();
+      }
+    });
+
+    msg('2단계: 채널 구독 중...','var(--g)');
+    let ok=false;
+    ch.subscribe(s=>{
+      console.log('student sub status:',s);
+      if(s==='SUBSCRIBED')ok=true;
+      if(s==='CHANNEL_ERROR')msg('채널 오류! 새로고침해 주세요.','var(--r)');
+    });
+
+    for(let i=0;i<100;i++){
+      await new Promise(r=>setTimeout(r,100));
+      if(ok)break;
+      if(i===49)msg('연결 중... 잠시만 기다려주세요 (5초)','var(--g)');
     }
-  });
-  let ok=false;
-  ch.subscribe(s=>{if(s==='SUBSCRIBED')ok=true;});
-  for(let i=0;i<100;i++){await new Promise(r=>setTimeout(r,100));if(ok)break;}
-  if(!ok){msg('연결 실패! 방 코드를 확인해 주세요.','var(--r)');return;}
-  ch.send({type:'broadcast',event:'student',payload:{t:'join',id:myId,name}});
-  msg('');
-  show('student');
-  $('swname').textContent=name+'님, 잠깐만 기다려요!';
-  $('sstat').textContent='연결 완료! 선생님을 기다리는 중...';
+
+    if(!ok){msg('연결 실패! 방 코드를 확인하거나 새로고침해 주세요.','var(--r)');return;}
+
+    msg('3단계: 입장 완료!','var(--g)');
+    ch.send({type:'broadcast',event:'student',payload:{t:'join',id:myId,name}});
+    await new Promise(r=>setTimeout(r,300));
+    msg('');
+    show('student');
+    $('swname').textContent=name+'님, 잠깐만 기다려요!';
+    $('sstat').textContent='연결 완료! 선생님을 기다리는 중...';
+  }catch(e){
+    console.error('goStudent error:',e);
+    msg('오류: '+e.message,'var(--r)');
+  }
 }
 
 function startGame(){
