@@ -10,10 +10,13 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--tx);}
-.screen{display:none;}.screen.on{display:block;}
 
-/* ── HOME ── */
-#home{display:flex;align-items:center;justify-content:center;height:100vh;padding:2rem 1rem;overflow-y:auto;}
+/* 화면 전환 */
+.page{display:none;width:100%;height:100vh;}
+.page.on{display:flex;flex-direction:column;}
+
+/* HOME */
+#home{align-items:center;justify-content:center;overflow-y:auto;}
 .card{background:var(--card);border:0.5px solid var(--bd);border-radius:var(--ra);padding:2rem;width:100%;max-width:400px;text-align:center;}
 .card h1{font-size:24px;font-weight:500;margin-bottom:8px;}
 .card p{font-size:14px;color:var(--mu);margin-bottom:20px;line-height:1.6;}
@@ -24,8 +27,8 @@ input:focus{border-color:var(--g);}
 .out{background:transparent;border:0.5px solid var(--bd);color:var(--tx);}.out:hover{background:#f0f0ee;}
 .div{font-size:13px;color:var(--mu);margin:10px 0;}
 
-/* ── TEACHER ── */
-#teacher{padding:1rem;height:100vh;overflow-y:auto;}
+/* TEACHER */
+#teacher{overflow-y:auto;padding:1rem;flex-direction:column;}
 .th{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:1rem;}
 .th h2{font-size:20px;font-weight:500;}
 .bx{display:inline-block;padding:4px 12px;border-radius:99px;font-size:13px;font-weight:500;}
@@ -47,34 +50,34 @@ input:focus{border-color:var(--g);}
 .lbb{height:100%;border-radius:3px;background:var(--g);transition:width .5s;}
 .lsc{font-size:17px;font-weight:500;color:var(--g);}
 
-/* ── STUDENT ── */
-#student{height:100vh;display:none;flex-direction:column;overflow:hidden;}
-#student.on{display:flex;}
-.wb{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;gap:10px;padding:2rem;}
-.wb .em{font-size:64px;}.wb h2{font-size:22px;font-weight:500;}.wb p{font-size:14px;color:var(--mu);}
+/* STUDENT WAIT */
+#student-wait{align-items:center;justify-content:center;text-align:center;gap:12px;}
+#student-wait .em{font-size:64px;}
+#student-wait h2{font-size:22px;font-weight:500;}
+#student-wait p{font-size:14px;color:var(--mu);}
 
-/* 게임 레이아웃 */
-#sgame{display:none;flex-direction:column;height:100vh;overflow:hidden;}
+/* STUDENT GAME */
+#student-game{flex-direction:column;overflow:hidden;}
 .hud{display:flex;justify-content:space-between;padding:6px 16px;background:var(--card);border-bottom:0.5px solid var(--bd);flex-shrink:0;}
 .hi{text-align:center;}.hl{font-size:12px;color:var(--mu);}.hv{font-size:22px;font-weight:500;}
 .pgbar{height:5px;background:#eee;flex-shrink:0;}
 
-/* 동작 가이드 패널 30% */
-#mission-panel{flex-shrink:0;height:30vh;background:var(--card);border-bottom:0.5px solid var(--bd);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;}
-#ssvg{display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
-#smn{font-size:26px;font-weight:500;margin-bottom:3px;}
+/* 동작 가이드 30% */
+#mission-panel{flex-shrink:0;height:30vh;min-height:140px;background:var(--card);border-bottom:0.5px solid var(--bd);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 12px;}
+#ssvg{display:flex;align-items:center;justify-content:center;margin-bottom:4px;}
+#smn{font-size:26px;font-weight:500;margin-bottom:2px;}
 #smd{font-size:15px;color:var(--mu);text-align:center;}
 
-/* 카메라 패널 70% - 세로 비율 강제 */
+/* 카메라 70% */
 #cam-panel{flex:1;position:relative;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center;}
 #cam-inner{position:relative;height:100%;aspect-ratio:3/4;max-width:100%;}
 #svid{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 #scan{position:absolute;top:0;left:0;width:100%;height:100%;transform:scaleX(-1);}
 #guide-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;transition:opacity .5s;}
-#guide-msg{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);color:#fff;font-size:14px;padding:5px 14px;border-radius:99px;white-space:nowrap;transition:opacity .5s;text-align:center;}
+#guide-msg{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);color:#fff;font-size:14px;padding:5px 14px;border-radius:99px;white-space:nowrap;transition:opacity .5s;}
 #scs{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:13px;padding:4px 12px;border-radius:99px;white-space:nowrap;}
 
-/* 하단 상태 */
+/* 하단 */
 #bottom-bar{flex-shrink:0;background:var(--card);border-top:0.5px solid var(--bd);}
 #pose-status{text-align:center;padding:8px 12px;font-size:16px;color:var(--mu);}
 #btn-pass-wrap{text-align:right;padding:4px 12px 6px;}
@@ -82,8 +85,8 @@ input:focus{border-color:var(--g);}
 #judge-msg{font-size:20px;font-weight:500;margin-bottom:10px;line-height:1.4;}
 
 /* RESULT */
-#result{display:none;position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;padding:2rem 1rem;}
-.ri{max-width:480px;margin:0 auto;text-align:center;}
+#result{overflow-y:auto;padding:2rem 1rem;align-items:flex-start;justify-content:center;}
+.ri{max-width:480px;width:100%;text-align:center;}
 .pod{display:flex;justify-content:center;align-items:flex-end;gap:8px;margin:1rem 0 1.5rem;}
 .pi{width:90px;text-align:center;}.pn{font-size:13px;font-weight:500;margin-bottom:3px;}.ps{font-size:12px;color:var(--mu);margin-bottom:3px;}
 .pb{border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font-size:24px;}
@@ -94,7 +97,7 @@ input:focus{border-color:var(--g);}
 <body>
 
 <!-- HOME -->
-<div id="home" class="screen on">
+<div id="home" class="page on">
   <div class="card">
     <div style="font-size:56px;margin-bottom:12px">🏃</div>
     <h1>스포츠 미션 게임</h1>
@@ -109,7 +112,7 @@ input:focus{border-color:var(--g);}
 </div>
 
 <!-- TEACHER -->
-<div id="teacher" class="screen">
+<div id="teacher" class="page">
   <div class="th">
     <h2>선생님 화면 <span id="tbadge" class="bx bg"></span></h2>
     <div style="display:flex;gap:8px;align-items:center">
@@ -139,72 +142,62 @@ input:focus{border-color:var(--g);}
   </div>
 </div>
 
-<!-- STUDENT -->
-<div id="student" class="screen">
-  <!-- 대기 -->
-  <div id="swait" class="wb">
-    <div class="em">⏳</div>
-    <h2>선생님을 기다리는 중...</h2>
-    <p id="swname"></p>
-    <p id="sstat" style="color:var(--g);font-size:13px">연결 중...</p>
+<!-- STUDENT WAIT -->
+<div id="student-wait" class="page">
+  <div class="em">⏳</div>
+  <h2>선생님을 기다리는 중...</h2>
+  <p id="swname"></p>
+  <p id="sstat" style="color:var(--g);font-size:13px">연결 중...</p>
+</div>
+
+<!-- STUDENT GAME -->
+<div id="student-game" class="page">
+  <div class="hud">
+    <div class="hi"><div class="hl">점수</div><div class="hv" id="ssc">0</div></div>
+    <div class="hi"><div class="hl">시간</div><div class="hv" id="stm" style="color:var(--g)">5:00</div></div>
+    <div class="hi"><div class="hl">콤보</div><div class="hv" id="scb">x1</div></div>
   </div>
-
-  <!-- 게임 -->
-  <div id="sgame">
-    <!-- HUD -->
-    <div class="hud">
-      <div class="hi"><div class="hl">점수</div><div class="hv" id="ssc">0</div></div>
-      <div class="hi"><div class="hl">시간</div><div class="hv" id="stm" style="color:var(--g)">5:00</div></div>
-      <div class="hi"><div class="hl">콤보</div><div class="hv" id="scb">x1</div></div>
+  <div class="pgbar"><div class="bb" id="sbar" style="width:100%;background:var(--g)"></div></div>
+  <div id="mission-panel">
+    <div id="ssvg"></div>
+    <div id="smn">준비 중...</div>
+    <div id="smd" style="font-size:15px;color:var(--mu)">카메라에 전신이 보이도록 서주세요</div>
+  </div>
+  <div id="cam-panel">
+    <div id="cam-inner">
+      <video id="svid" autoplay playsinline muted></video>
+      <canvas id="scan"></canvas>
+      <svg id="guide-svg" viewBox="0 0 100 133" preserveAspectRatio="xMidYMid meet" style="opacity:0.3">
+        <circle cx="50" cy="10" r="8" fill="none" stroke="white" stroke-width="2"/>
+        <line x1="50" y1="18" x2="50" y2="65" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <line x1="50" y1="28" x2="30" y2="50" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <line x1="50" y1="28" x2="70" y2="50" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <line x1="50" y1="65" x2="38" y2="100" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <line x1="38" y1="100" x2="35" y2="130" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <line x1="50" y1="65" x2="62" y2="100" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <line x1="62" y1="100" x2="65" y2="130" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div id="guide-msg">카메라에 전신이 보이도록 서주세요</div>
+      <div id="scs">카메라 준비 중...</div>
     </div>
-    <div class="pgbar"><div class="bb" id="sbar" style="width:100%;background:var(--g)"></div></div>
-
-    <!-- 동작 가이드 (30%) -->
-    <div id="mission-panel">
-      <div id="ssvg"></div>
-      <div id="smn">준비 중...</div>
-      <div id="smd" style="font-size:15px;color:var(--mu)">카메라에 전신이 보이도록 서주세요</div>
+  </div>
+  <div id="bottom-bar">
+    <div id="pose-status">카메라 위치를 맞춰주세요</div>
+    <div id="btn-pass-wrap">
+      <button class="btn out" id="btn-pass" style="width:auto;padding:6px 18px;margin:0;font-size:14px">패스 ⏭</button>
     </div>
-
-    <!-- 카메라 (70%) -->
-    <div id="cam-panel">
-      <div id="cam-inner">
-        <video id="svid" autoplay playsinline muted></video>
-        <canvas id="scan"></canvas>
-        <svg id="guide-svg" viewBox="0 0 100 133" preserveAspectRatio="xMidYMid meet" style="opacity:0.3">
-          <circle cx="50" cy="10" r="8" fill="none" stroke="white" stroke-width="2"/>
-          <line x1="50" y1="18" x2="50" y2="65" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          <line x1="50" y1="28" x2="30" y2="50" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          <line x1="50" y1="28" x2="70" y2="50" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          <line x1="50" y1="65" x2="38" y2="100" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          <line x1="38" y1="100" x2="35" y2="130" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          <line x1="50" y1="65" x2="62" y2="100" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          <line x1="62" y1="100" x2="65" y2="130" stroke="white" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <div id="guide-msg">카메라에 전신이 보이도록 서주세요</div>
-        <div id="scs">카메라 준비 중...</div>
-      </div>
-    </div>
-
-    <!-- 하단 상태바 -->
-    <div id="bottom-bar">
-      <div id="pose-status">카메라 위치를 맞춰주세요</div>
-      <div id="btn-pass-wrap">
-        <button class="btn out" id="btn-pass" style="width:auto;padding:6px 18px;margin:0;font-size:14px">패스 ⏭</button>
-      </div>
-      <div id="judge-panel" style="display:none">
-        <div id="judge-msg"></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn green" id="btn-next" style="flex:1;margin:0">다음 동작 →</button>
-          <button class="btn out" id="btn-retry" style="flex:1;margin:0">다시 할게요 🔄</button>
-        </div>
+    <div id="judge-panel" style="display:none">
+      <div id="judge-msg"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn green" id="btn-next" style="flex:1;margin:0">다음 동작 →</button>
+        <button class="btn out" id="btn-retry" style="flex:1;margin:0">다시 할게요 🔄</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- RESULT -->
-<div id="result">
+<div id="result" class="page">
   <div class="ri">
     <div style="font-size:52px;margin-bottom:8px">🏆</div>
     <h2 style="font-size:26px;font-weight:500;margin-bottom:20px">게임 종료!</h2>
@@ -220,11 +213,10 @@ input:focus{border-color:var(--g);}
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SURL = 'https://xfqxorbmfxclrhxtweib.supabase.co';
-const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXhvcmJtZnhjbHJoeHR3ZWliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDUwNDMsImV4cCI6MjA5MTY4MTA0M30.GIC1E2Lqa_0lX9YOZ_Etkuv1YMIddrQ36Lm9kRHSJwo';
-const sb = createClient(SURL, SKEY);
+const SURL='https://xfqxorbmfxclrhxtweib.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXhvcmJtZnhjbHJoeHR3ZWliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDUwNDMsImV4cCI6MjA5MTY4MTA0M30.GIC1E2Lqa_0lX9YOZ_Etkuv1YMIddrQ36Lm9kRHSJwo';
+const sb=createClient(SURL,SKEY);
 
-// ── SVG 동작 그림 ──
 const C='#1D9E75';
 const h=(cx,cy)=>`<circle cx="${cx}" cy="${cy}" r="10" fill="${C}"/>`;
 const l=(x1,y1,x2,y2,w=4)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C}" stroke-width="${w}" stroke-linecap="round"/>`;
@@ -247,7 +239,7 @@ const POSES={
   cheek_frame:  svg(h(40,12)+body()+l(40,35,15,20)+l(40,35,65,20)+legs()),
   right_knee:   svg(h(40,12)+body()+l(40,38,20,55)+l(40,38,60,55)+l(40,70,27,110,5)+l(40,70,56,56,5)+l(56,56,62,82,5)),
   left_knee:    svg(h(40,12)+body()+l(40,38,20,55)+l(40,38,60,55)+l(40,70,24,56,5)+l(24,56,18,82,5)+l(40,70,53,110,5)),
-  hands_head_wide: svg(h(45,12)+l(45,22,45,70,5)+l(45,38,8,16)+l(45,38,82,16)+l(45,70,32,110,5)+l(45,70,58,110,5),90,120),
+  hands_head_wide:svg(h(45,12)+l(45,22,45,70,5)+l(45,38,8,16)+l(45,38,82,16)+l(45,70,32,110,5)+l(45,70,58,110,5),90,120),
   right_forward: svg(h(40,12)+body()+l(40,38,90,38)+l(40,38,20,55)+legs(),100,120),
   left_forward:  svg(h(60,12)+l(60,22,60,70,5)+l(60,38,10,38)+l(60,38,80,55)+l(60,70,47,110,5)+l(60,70,73,110,5),100,120),
   sky_point:    svg(h(40,12)+body()+l(40,35,65,4)+l(40,35,20,55)+legs()),
@@ -289,7 +281,16 @@ let timer=null,pose=null;
 const $=id=>document.getElementById(id);
 const ri=i=>['🥇','🥈','🥉'][i]??(i+1)+'위';
 const fmt=s=>Math.floor(s/60)+':'+String(Math.ceil(s%60)).padStart(2,'0');
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');}
+
+// ── 화면 전환 ──
+function show(id){
+  document.querySelectorAll('.page').forEach(p=>{
+    p.classList.remove('on');
+  });
+  const el=$(id);
+  if(el) el.classList.add('on');
+}
+
 function msg(t,c='var(--r)'){$('emsg').textContent=t;$('emsg').style.color=c;}
 
 const p=new URLSearchParams(location.search);
@@ -390,54 +391,29 @@ async function goStudent(){
   if(!name||!code){msg('이름과 방 코드를 입력해 주세요!');return;}
   myName=name;room=code;role='student';
   myId='s'+Date.now()+Math.random().toString(36).slice(2,5);
-
-  msg('1단계: Supabase 연결 중...','var(--g)');
-  await new Promise(r=>setTimeout(r,100));
-
-  try{
-    ch=sb.channel('room-'+code,{config:{broadcast:{self:false}}});
-    ch.on('broadcast',{event:'teacher'},({payload})=>{
-      if(payload.t==='start')startGame();
-      if(payload.t==='end'){
-        lb=Object.entries(payload.players||{}).map(([id,v])=>({id,...v})).sort((a,b)=>b.score-a.score);
-        showResult();
-      }
-    });
-
-    msg('2단계: 채널 구독 중...','var(--g)');
-    let ok=false;
-    ch.subscribe(s=>{
-      console.log('student sub status:',s);
-      if(s==='SUBSCRIBED')ok=true;
-      if(s==='CHANNEL_ERROR')msg('채널 오류! 새로고침해 주세요.','var(--r)');
-    });
-
-    for(let i=0;i<100;i++){
-      await new Promise(r=>setTimeout(r,100));
-      if(ok)break;
-      if(i===49)msg('연결 중... 잠시만 기다려주세요 (5초)','var(--g)');
+  msg('연결 중...','var(--g)');
+  ch=sb.channel('room-'+code,{config:{broadcast:{self:false}}});
+  ch.on('broadcast',{event:'teacher'},({payload})=>{
+    if(payload.t==='start')startGame();
+    if(payload.t==='end'){
+      lb=Object.entries(payload.players||{}).map(([id,v])=>({id,...v})).sort((a,b)=>b.score-a.score);
+      showResult();
     }
-
-    if(!ok){msg('연결 실패! 방 코드를 확인하거나 새로고침해 주세요.','var(--r)');return;}
-
-    msg('3단계: 입장 완료!','var(--g)');
-    ch.send({type:'broadcast',event:'student',payload:{t:'join',id:myId,name}});
-    await new Promise(r=>setTimeout(r,300));
-    msg('');
-    show('student');
-    $('swname').textContent=name+'님, 잠깐만 기다려요!';
-    $('sstat').textContent='연결 완료! 선생님을 기다리는 중...';
-  }catch(e){
-    console.error('goStudent error:',e);
-    msg('오류: '+e.message,'var(--r)');
-  }
+  });
+  let ok=false;
+  ch.subscribe(s=>{if(s==='SUBSCRIBED')ok=true;});
+  for(let i=0;i<100;i++){await new Promise(r=>setTimeout(r,100));if(ok)break;}
+  if(!ok){msg('연결 실패! 방 코드를 확인해 주세요.','var(--r)');return;}
+  ch.send({type:'broadcast',event:'student',payload:{t:'join',id:myId,name}});
+  msg('');
+  show('student-wait');
+  $('swname').textContent=name+'님, 잠깐만 기다려요!';
+  $('sstat').textContent='연결 완료! 선생님을 기다리는 중...';
 }
 
 function startGame(){
   score=0;combo=1;cnt=0;bodyReady=false;cur=null;
-  $('swait').style.display='none';
-  $('sgame').style.display='flex';
-  // 전신 인식 전까지 미션 패널 대기 상태
+  show('student-game');
   $('ssvg').innerHTML='';
   $('smn').textContent='준비 중...';
   $('smd').textContent='카메라에 전신이 보이도록 서주세요';
@@ -468,7 +444,7 @@ function showResult(){
   if(pose){try{pose.close();}catch{}}
   const v=$('svid');
   if(v?.srcObject)v.srcObject.getTracks().forEach(t=>t.stop());
-  $('result').style.display='block';
+  show('result');
   const t3=lb.slice(0,3),ord=[t3[1],t3[0],t3[2]];
   const hs=[100,130,80],cs=['#B4B2A9','#EF9F27','#9FE1CB'],ms=['🥈','🥇','🥉'];
   $('rpod').innerHTML=ord.map((p,i)=>p?
@@ -479,7 +455,6 @@ function showResult(){
   ).join('');
 }
 
-// ── 카메라 ──
 async function setupCam(){
   try{
     const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:720},height:{ideal:1280}}});
@@ -511,11 +486,9 @@ function loadPose(){
   tryLoad();
 }
 
-// ── 포즈 판별 ──
 function onPose(res){
   const guideSvg=$('guide-svg');
   const guideMsg=$('guide-msg');
-
   if(!res.poseLandmarks){
     guideSvg.style.opacity='0.3';
     guideMsg.style.opacity='1';
@@ -524,62 +497,38 @@ function onPose(res){
     $('pose-status').style.color='var(--mu)';
     return;
   }
-
   const L=res.poseLandmarks;
   const nose=L[0];
-  // 좌우반전 보정
   const lw=L[16],rw=L[15];
   const ls=L[12],rs=L[11];
   const lh=L[24],rh=L[23];
-  const lAnkle=L[28],rAnkle=L[27];
-
-  // 전신 인식 체크 - 코+어깨 필수, 엉덩이 권장
-  const coreOk = nose&&ls&&rs&&
+  const coreOk=nose&&ls&&rs&&
     nose.x>0.02&&nose.x<0.98&&nose.y>0.02&&nose.y<0.95&&
     ls.visibility>0.3&&rs.visibility>0.3;
-  const hipOk = lh&&rh&&lh.visibility>0.3&&rh.visibility>0.3&&lh.y<0.97&&rh.y<0.97;
-
+  const hipOk=lh&&rh&&lh.visibility>0.3&&rh.visibility>0.3&&lh.y<0.97&&rh.y<0.97;
   if(!coreOk){
-    guideSvg.style.opacity='0.3';
-    guideMsg.style.opacity='1';
+    guideSvg.style.opacity='0.3';guideMsg.style.opacity='1';
     guideMsg.textContent='카메라에 전신이 보이도록 서주세요';
     $('pose-status').textContent='📏 위치를 맞춰주세요!';
     $('pose-status').style.color='var(--a)';
-    bodyReady=false;
-    return;
+    bodyReady=false;return;
   }
-
   if(!hipOk){
-    guideSvg.style.opacity='0.15';
-    guideMsg.style.opacity='1';
+    guideSvg.style.opacity='0.15';guideMsg.style.opacity='1';
     guideMsg.textContent='뒤로 조금 물러서세요';
     $('pose-status').textContent='📏 조금 더 뒤로 서주세요';
     $('pose-status').style.color='var(--a)';
-    bodyReady=false;
-    return;
+    bodyReady=false;return;
   }
-
-  // 전신 인식 완료
-  guideSvg.style.opacity='0';
-  guideMsg.style.opacity='0';
-
-  // 처음 전신 인식되면 미션 시작
-  if(!bodyReady){
-    bodyReady=true;
-    pickM();
-    $('pose-status').textContent='동작을 따라 하세요!';
-    $('pose-status').style.color='var(--mu)';
-  }
-
+  guideSvg.style.opacity='0';guideMsg.style.opacity='0';
+  if(!bodyReady){bodyReady=true;pickM();}
   if(judging||!cur)return;
-
   const shW=Math.abs(ls.x-rs.x)||0.15;
   const shMidY=(ls.y+rs.y)/2;
   const hipMidY=(lh.y+rh.y)/2;
   const bodyH=Math.max(hipMidY-shMidY,0.1);
   let hit=false;
   const k=cur.k;
-
   if(k==='raise_both')         hit=lw.y<nose.y&&rw.y<nose.y;
   else if(k==='raise_right')   hit=rw.y<nose.y&&lw.y>ls.y;
   else if(k==='raise_left')    hit=lw.y<nose.y&&rw.y>rs.y;
@@ -600,7 +549,6 @@ function onPose(res){
   else if(k==='sky_point')     hit=rw.y<nose.y&&lw.y>ls.y;
   else if(k==='lean_side')     {const le=Math.min(ls.x,rs.x)-shW*0.3,re=Math.max(ls.x,rs.x)+shW*0.3;hit=nose.x<le||nose.x>re;}
   else if(k==='clap_above')    hit=lw.y<nose.y&&rw.y<nose.y&&Math.abs(lw.x-rw.x)<shW*0.4;
-
   const ps=$('pose-status');
   if(hit){
     if(!holdStart)holdStart=Date.now();
