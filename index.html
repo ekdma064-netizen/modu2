@@ -130,6 +130,26 @@ input:focus{border-color:var(--g);}
     <div class="cw">
       <video id="svid" autoplay playsinline muted></video>
       <canvas id="scan"></canvas>
+      <!-- 신체 가이드 오버레이 -->
+      <svg id="guide-svg" viewBox="0 0 100 133" preserveAspectRatio="xMidYMid meet"
+        style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0.25;transition:opacity .5s">
+        <!-- 머리 -->
+        <circle cx="50" cy="10" r="8" fill="none" stroke="white" stroke-width="1.5"/>
+        <!-- 몸통 -->
+        <line x1="50" y1="18" x2="50" y2="65" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- 왼팔 -->
+        <line x1="50" y1="28" x2="30" y2="50" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- 오른팔 -->
+        <line x1="50" y1="28" x2="70" y2="50" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- 왼다리 -->
+        <line x1="50" y1="65" x2="38" y2="100" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="38" y1="100" x2="35" y2="130" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- 오른다리 -->
+        <line x1="50" y1="65" x2="62" y2="100" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="62" y1="100" x2="65" y2="130" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <!-- 가이드 문구 -->
+      <div id="guide-msg" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.55);color:#fff;font-size:12px;padding:3px 10px;border-radius:99px;white-space:nowrap;transition:opacity .5s">전신이 화면 안에 들어오도록 서세요</div>
       <div class="cs" id="scs">카메라 준비 중...</div>
     </div>
     <div id="pose-status" style="text-align:center;padding:8px;font-size:14px;color:var(--mu);margin-bottom:6px">동작을 따라 하세요!</div>
@@ -455,9 +475,49 @@ function loadPose(){
 }
 
 function onPose(res){
-  if(!res.poseLandmarks||judging)return;
+  const guideSvg = $('guide-svg');
+  const guideMsg = $('guide-msg');
+
+  if(!res.poseLandmarks){
+    guideSvg.style.opacity='0.25';
+    guideMsg.style.opacity='1';
+    guideMsg.textContent='전신이 화면 안에 들어오도록 서세요';
+    if(!judging){
+      $('pose-status').textContent='사람을 인식 중...';
+      $('pose-status').style.color='var(--mu)';
+    }
+    return;
+  }
+
   const L=res.poseLandmarks;
   const nose=L[0],lw=L[15],rw=L[16],ls=L[11],rs=L[12],lh=L[23],rh=L[24];
+  const lAnkle=L[27], rAnkle=L[28];
+
+  // 전신 확인: 코, 양어깨, 양발목이 모두 화면 안에 있는지
+  const keyPoints=[nose,ls,rs,lh,rh,lAnkle,rAnkle];
+  const allIn = keyPoints.every(pt=>pt && pt.x>0.05 && pt.x<0.95 && pt.y>0.05 && pt.y<0.95);
+  const anklesIn = lAnkle && rAnkle && lAnkle.y < 0.95 && rAnkle.y < 0.95;
+
+  if(!allIn || !anklesIn){
+    // 가이드 표시
+    guideSvg.style.opacity='0.3';
+    guideMsg.style.opacity='1';
+    if(!anklesIn) guideMsg.textContent='발이 보이도록 뒤로 물러서세요';
+    else if(nose.y < 0.05) guideMsg.textContent='아래로 내려가세요';
+    else guideMsg.textContent='전신이 화면 안에 들어오도록 서세요';
+    if(!judging){
+      $('pose-status').textContent='📏 위치를 맞춰주세요!';
+      $('pose-status').style.color='var(--a)';
+    }
+    return;
+  }
+
+  // 전신이 잘 들어오면 가이드 숨김
+  guideSvg.style.opacity='0';
+  guideMsg.style.opacity='0';
+
+  if(judging)return;
+
   const shW=Math.abs(ls.x-rs.x)||0.15;
   const shMidY=(ls.y+rs.y)/2;
   const hipMidY=(lh.y+rh.y)/2;
@@ -470,7 +530,7 @@ function onPose(res){
   else if(k==='raise_left')   hit=lw.y<nose.y&&rw.y>rs.y;
   else if(k==='arms_wide')    hit=Math.abs(lw.x-rw.x)>shW*1.8&&Math.abs(lw.y-ls.y)<shW*0.5&&Math.abs(rw.y-rs.y)<shW*0.5;
   else if(k==='attention')    hit=Math.abs(lw.x-lh.x)<shW*0.4&&Math.abs(lw.y-lh.y)<shW*0.5&&Math.abs(rw.x-rh.x)<shW*0.4&&Math.abs(rw.y-rh.y)<shW*0.5;
-  else if(k==='bow')          hit=nose.y>shMidY||( lw.y>nose.y+bodyH*0.2&&rw.y>nose.y+bodyH*0.2);
+  else if(k==='bow')          hit=nose.y>shMidY||(lw.y>nose.y+bodyH*0.2&&rw.y>nose.y+bodyH*0.2);
   else if(k==='hands_hip')    hit=Math.abs(lw.y-lh.y)<bodyH*0.3&&Math.abs(rw.y-rh.y)<bodyH*0.3;
   else if(k==='cross_arms')   hit=lw.y>ls.y&&lw.y<hipMidY&&rw.y>rs.y&&rw.y<hipMidY&&lw.x>rs.x&&rw.x<ls.x;
   else if(k==='right_hip')    hit=Math.abs(rw.y-rh.y)<bodyH*0.3&&Math.abs(lw.y-lh.y)>bodyH*0.35;
